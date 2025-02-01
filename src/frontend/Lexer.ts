@@ -296,7 +296,7 @@ export class Lexer {
                 continue;
             }
 
-            // Check if it is a number (int or float)
+            // Check if it is a number (int, float or binary)
             if (this.isDigit(char)) {
                 let number = "";
 
@@ -321,6 +321,19 @@ export class Lexer {
                     }
                 }
 
+                // Check if is a binary
+                if (this.source[this.offset] === "b") {
+                    number += this.source[this.offset];
+                    this.offset++;
+                    while (
+                        this.offset < this.source.length &&
+                        this.isDigit(this.source[this.offset])
+                    ) {
+                        number += this.source[this.offset];
+                        this.offset++;
+                    }
+                }
+
                 if (number.includes(".")) {
                     this.createToken(
                         TokenType.FLOAT,
@@ -328,6 +341,15 @@ export class Lexer {
                     );
                     continue;
                 }
+
+                if (number.includes("b")) {
+                    this.createToken(
+                        TokenType.BINARY,
+                        number,
+                    );
+                    continue;
+                }
+
                 this.createToken(
                     TokenType.INT,
                     number,
