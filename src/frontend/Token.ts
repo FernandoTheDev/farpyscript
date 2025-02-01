@@ -20,6 +20,9 @@ export enum TokenType {
     BOOL, // true || false
     NULL, // null
 
+    // Especials
+    BINARY,
+
     // Symbols
     EQUALS, // =
     PLUS, // +
@@ -58,8 +61,8 @@ export interface Loc {
 }
 
 export type Token = {
-    kind?: TokenType;
-    value?: NativeValue;
+    kind: TokenType;
+    value: NativeValue; // It already comes with the typed value
     loc: Loc;
 };
 

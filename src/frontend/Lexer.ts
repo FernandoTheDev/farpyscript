@@ -2,13 +2,14 @@ import { Keywords, Loc, NativeValue, Token, TokenType } from "./Token.ts";
 import { ErrorReporter } from "../error/ErrorReporter.ts";
 
 export class Lexer {
-    protected line: number = 1;
+    private error: ErrorReporter;
     private source: string;
     private file: string;
+    protected line: number = 1;
     protected offset: number = 0; // Offset global
-    protected lineOffset: number = 0; // Offset relativo à linha atual
+    protected lineOffset: number = 0; // Offset relative to current line
     protected start: number = 0;
-    private error: ErrorReporter;
+    protected tokens: Token[] = [];
 
     public constructor(file: string, source: string) {
         this.file = file;
@@ -17,10 +18,8 @@ export class Lexer {
     }
 
     public tokenize(): Token[] {
-        const tokens: Token[] = [];
-
         while (this.offset < this.source.length) {
-            this.start = this.offset - this.lineOffset; // Ajusta o início para o offset local
+            this.start = this.offset - this.lineOffset; // Sets start to local offset
             const char = this.source[this.offset];
 
             if (char === "\n") {
@@ -36,50 +35,34 @@ export class Lexer {
             }
 
             if (char === "+") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.PLUS,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.PLUS,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
             if (char === ",") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.COMMA,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.COMMA,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
             if (char === ";") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.SEMICOLON,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.SEMICOLON,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
             if (char === ":") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.COLON,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.COLON,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
@@ -111,83 +94,61 @@ export class Lexer {
                         this.offset += 2;
                     } else {
                         this.error.showError(
-                            "Comentário de bloco não fechado",
+                            "Unclosed block comment",
                             this.getLocation(this.start, this.offset),
                         );
                         return [];
                     }
                     continue;
                 } else {
-                    // Trata como o caractere `/` normal.
-                    tokens.push(
-                        this.createToken(
-                            TokenType.SLASH,
-                            char,
-                            this.getLocation(
-                                this.start,
-                                this.start + char.length,
-                            ),
-                        ),
+                    // Normal slash
+                    this.createToken(
+                        TokenType.SLASH,
+                        char,
+                        false,
                     );
                     continue;
                 }
             }
 
             if (char === "-") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.MINUS,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.MINUS,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
             if (char === "*") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.ASTERISK,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.ASTERISK,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
             if (char === "%") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.PERCENT,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.PERCENT,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
             if (char === "=") {
                 this.offset++;
                 if (this.source[this.offset] === "=") {
-                    this.offset++;
-                    tokens.push(
-                        this.createToken(
-                            TokenType.EQUALS_EQUALS,
-                            "==",
-                            this.getLocation(this.start, this.offset),
-                        ),
+                    this.createToken(
+                        TokenType.EQUALS_EQUALS,
+                        "==",
                     );
                     continue;
                 }
-                tokens.push(
-                    this.createToken(
-                        TokenType.EQUALS,
-                        "=",
-                        this.getLocation(this.start, this.offset),
-                    ),
+
+                this.createToken(
+                    TokenType.EQUALS,
+                    "=",
+                    false,
                 );
                 continue;
             }
@@ -195,22 +156,17 @@ export class Lexer {
             if (char === ">") {
                 this.offset++;
                 if (this.source[this.offset] === "=") {
-                    this.offset++;
-                    tokens.push(
-                        this.createToken(
-                            TokenType.GREATER_THAN_OR_EQUALS,
-                            ">=",
-                            this.getLocation(this.start, this.offset),
-                        ),
+                    this.createToken(
+                        TokenType.GREATER_THAN_OR_EQUALS,
+                        ">=",
                     );
                     continue;
                 }
-                tokens.push(
-                    this.createToken(
-                        TokenType.GREATER_THAN,
-                        ">",
-                        this.getLocation(this.start, this.offset),
-                    ),
+
+                this.createToken(
+                    TokenType.GREATER_THAN,
+                    ">",
+                    false,
                 );
                 continue;
             }
@@ -218,22 +174,17 @@ export class Lexer {
             if (char === "<") {
                 this.offset++;
                 if (this.source[this.offset] === "=") {
-                    this.offset++;
-                    tokens.push(
-                        this.createToken(
-                            TokenType.LESS_THAN_OR_EQUALS,
-                            "<=",
-                            this.getLocation(this.start, this.offset),
-                        ),
+                    this.createToken(
+                        TokenType.LESS_THAN_OR_EQUALS,
+                        "<=",
                     );
                     continue;
                 }
-                tokens.push(
-                    this.createToken(
-                        TokenType.LESS_THAN,
-                        "<",
-                        this.getLocation(this.start, this.offset),
-                    ),
+
+                this.createToken(
+                    TokenType.LESS_THAN,
+                    "<",
+                    false,
                 );
                 continue;
             }
@@ -241,13 +192,9 @@ export class Lexer {
             if (char === "|") {
                 this.offset++;
                 if (this.source[this.offset] === "|") {
-                    this.offset++;
-                    tokens.push(
-                        this.createToken(
-                            TokenType.OR,
-                            "||",
-                            this.getLocation(this.start, this.offset),
-                        ),
+                    this.createToken(
+                        TokenType.OR,
+                        "||",
                     );
                     continue;
                 }
@@ -256,13 +203,9 @@ export class Lexer {
             if (char === "&") {
                 this.offset++;
                 if (this.source[this.offset] === "&") {
-                    this.offset++;
-                    tokens.push(
-                        this.createToken(
-                            TokenType.AND,
-                            "&&",
-                            this.getLocation(this.start, this.offset),
-                        ),
+                    this.createToken(
+                        TokenType.AND,
+                        "&&",
                     );
                     continue;
                 }
@@ -271,82 +214,58 @@ export class Lexer {
             if (char === "!") {
                 this.offset++;
                 if (this.source[this.offset] === "=") {
-                    this.offset++;
-                    tokens.push(
-                        this.createToken(
-                            TokenType.NOT_EQUALS,
-                            "!=",
-                            this.getLocation(this.start, this.offset),
-                        ),
+                    this.createToken(
+                        TokenType.NOT_EQUALS,
+                        "!=",
                     );
                     continue;
                 }
             }
 
             if (char === "(") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.LPAREN,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.LPAREN,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
             if (char === ")") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.RPAREN,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.RPAREN,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
             if (char === "{") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.LBRACE,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.LBRACE,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
             if (char === "}") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.RBRACE,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.RBRACE,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
             if (char === ".") {
-                tokens.push(
-                    this.createToken(
-                        TokenType.DOT,
-                        char,
-                        this.getLocation(this.start, this.start + char.length),
-                    ),
+                this.createToken(
+                    TokenType.DOT,
+                    char,
                 );
-                this.offset++;
                 continue;
             }
 
-            // Verifica se é uma string (erro de string não fechada)
+            // Checks if it is a string (unclosed string error)
             if (char === '"') {
                 let value = "";
-                this.offset++; // Pula o primeiro "
+                this.offset++; // jump "
 
                 while (
                     this.offset < this.source.length &&
@@ -361,30 +280,23 @@ export class Lexer {
 
                 if (this.source[this.offset] !== '"') {
                     this.error.showError(
-                        "String não fechada",
+                        "String not closed.",
                         this.getLocation(
                             this.start,
-                            this.start + value.length + 2,
+                            this.start + value.length + 1,
                         ),
                     );
                     return [];
                 }
 
-                tokens.push(
-                    this.createToken(
-                        TokenType.STRING,
-                        value,
-                        this.getLocation(
-                            this.start,
-                            this.start + value.length + 2,
-                        ),
-                    ),
+                this.createToken(
+                    TokenType.STRING,
+                    value,
                 );
-                this.offset++; // Pula o segundo "
                 continue;
             }
 
-            // Verifica se é um número (inteiro ou float)
+            // Check if it is a number (int or float)
             if (this.isDigit(char)) {
                 let number = "";
 
@@ -396,7 +308,7 @@ export class Lexer {
                     this.offset++;
                 }
 
-                // Verifica se é um float
+                // Check if is a float
                 if (this.source[this.offset] === ".") {
                     number += this.source[this.offset];
                     this.offset++;
@@ -409,19 +321,22 @@ export class Lexer {
                     }
                 }
 
-                tokens.push(
+                if (number.includes(".")) {
                     this.createToken(
-                        TokenType.INT,
+                        TokenType.FLOAT,
                         number,
-                        this.getLocation(
-                            this.start,
-                            this.start + number.length,
-                        ),
-                    ),
+                    );
+                    continue;
+                }
+                this.createToken(
+                    TokenType.INT,
+                    number,
                 );
                 continue;
             }
 
+            // Fernand0
+            // print
             if (this.isAlphaNumeric(char)) {
                 let id = "";
 
@@ -434,52 +349,33 @@ export class Lexer {
                 }
 
                 if (Keywords[id] !== undefined) {
-                    tokens.push(
-                        this.createToken(
-                            Keywords[id],
-                            id,
-                            this.getLocation(
-                                this.start,
-                                this.start + id.length,
-                            ),
-                        ),
+                    this.createToken(
+                        Keywords[id],
+                        id,
                     );
-                } else {
-                    tokens.push(
-                        this.createToken(
-                            TokenType.IDENTIFIER,
-                            id,
-                            this.getLocation(
-                                this.start,
-                                this.start + id.length,
-                            ),
-                        ),
-                    );
+                    continue;
                 }
-
+                this.createToken(
+                    TokenType.IDENTIFIER,
+                    id,
+                );
                 continue;
             }
 
-            // Caso o caractere não seja válido, mostra erro
+            // If the character is not valid, it shows an error
             this.error.showError(
-                `Caractere inválido '${char}'`,
+                `Invalid char '${char}'`,
                 this.getLocation(this.start, this.start + char.length),
             );
             return [];
         }
 
-        tokens.push(
-            this.createToken(
-                TokenType.EOF,
-                "\0",
-                this.getLocation(
-                    this.source.length,
-                    this.source.length,
-                ),
-            ),
+        this.createToken(
+            TokenType.EOF,
+            "\0",
         );
 
-        return tokens;
+        return this.tokens;
     }
 
     private isAlphaNumeric(token: string): boolean {
@@ -503,9 +399,19 @@ export class Lexer {
     private createToken(
         kind: TokenType,
         value: NativeValue,
-        loc: Loc,
+        jump: boolean = true,
     ): Token {
-        return { kind, value, loc: loc };
+        const token: Token = {
+            kind,
+            value,
+            loc: this.getLocation(
+                this.start,
+                this.start + (String(value).length ?? 0),
+            ),
+        };
+        this.tokens.push(token);
+        if (jump) this.offset++;
+        return token;
     }
 
     private getLineText(line: number): string {

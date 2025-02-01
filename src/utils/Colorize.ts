@@ -1,6 +1,6 @@
 export class Colorize {
     // Mapeamento de estilos e cores
-    private styles: Record<string, string> = {
+    private static styles: Record<string, string> = {
         reset: "\x1b[0m",
         bold: "\x1b[1m",
         italic: "\x1b[3m",
@@ -16,7 +16,7 @@ export class Colorize {
     };
 
     // Aplica estilos e cores
-    public style(text: string, ...styles: string[]): string {
+    public static style(text: string, ...styles: string[]): string {
         const appliedStyles = styles
             .map((style) => this.styles[style] || "")
             .join("");
@@ -24,43 +24,43 @@ export class Colorize {
     }
 
     // Métodos específicos para facilitar o uso
-    public bold(text: string): string {
+    public static bold(text: string): string {
         return this.style(text, "bold");
     }
 
-    public italic(text: string): string {
+    public static italic(text: string): string {
         return this.style(text, "italic");
     }
 
-    public underline(text: string): string {
+    public static underline(text: string): string {
         return this.style(text, "underline");
     }
 
-    public red(text: string): string {
+    public static red(text: string): string {
         return this.style(text, "red");
     }
 
-    public green(text: string): string {
+    public static green(text: string): string {
         return this.style(text, "green");
     }
 
-    public yellow(text: string): string {
+    public static yellow(text: string): string {
         return this.style(text, "yellow");
     }
 
-    public blue(text: string): string {
+    public static blue(text: string): string {
         return this.style(text, "blue");
     }
 
-    public cyan(text: string): string {
+    public static cyan(text: string): string {
         return this.style(text, "cyan");
     }
 
-    public magenta(text: string): string {
+    public static magenta(text: string): string {
         return this.style(text, "magenta");
     }
 
-    public gray(text: string): string {
+    public static gray(text: string): string {
         return this.style(text, "gray");
     }
 }

@@ -2,12 +2,6 @@ import { Colorize } from "../utils/Colorize.ts";
 import { Loc } from "../frontend/Token.ts";
 
 export class ErrorReporter {
-    private colorize: Colorize;
-
-    constructor() {
-        this.colorize = new Colorize();
-    }
-
     public showError(message: string, loc: Loc): void {
         this.displayErrorHeader(message, loc);
         this.displayLineWithError(
@@ -20,13 +14,13 @@ export class ErrorReporter {
 
     private displayErrorHeader(message: string, loc: Loc): void {
         console.error(
-            this.colorize.bold(
-                `${this.colorize.red("error")}: ${this.colorize.bold(message)}`,
+            Colorize.bold(
+                `${Colorize.red("error")}: ${Colorize.bold(message)}`,
             ),
         );
         console.error(
-            `${this.colorize.bold(this.colorize.blue(" ---->"))} ${
-                this.colorize.bold(`${loc.file}:${loc.line}:${loc.start + 1}`)
+            `${Colorize.bold(Colorize.blue(" ---->"))} ${
+                Colorize.bold(`${loc.file}:${loc.line}:${loc.start + 1}`)
             }`,
         );
     }
@@ -41,14 +35,14 @@ export class ErrorReporter {
 
         console.error(
             `${
-                this.colorize.bold(this.colorize.blue(`${lineNumber} |`))
+                Colorize.bold(Colorize.blue(`${lineNumber} |`))
             }      ${lineContent}`,
         );
 
         console.error(
-            this.colorize.bold(this.colorize.blue("  |")) +
+            Colorize.bold(Colorize.blue("  |")) +
                 " ".repeat(start + 6) +
-                this.colorize.bold(this.colorize.red("^".repeat(markerLength))),
+                Colorize.bold(Colorize.red("^".repeat(markerLength))),
         );
     }
 }
