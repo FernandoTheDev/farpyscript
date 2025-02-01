@@ -20,6 +20,24 @@ FarpyScript was born out of curiosity about the inner workings of programming la
 
 Partially inspired by the [guide-to-interpreters-series](https://github.com/tlaceby/guide-to-interpreters-series) project, FarpyScript implements a recursive descent parser, ideal for educational purposes and small-scale projects.
 
+## Instalation
+```bash
+git clone https://github.com/FernandoTheDev/farpyscript
+cd farpyscript
+```
+
+Repl:
+```bash
+deno run -A main.ts
+```
+
+File:
+```bash
+deno run -A main.ts <FILE>.fscript
+```
+
+In the future, binary with path will come
+
 ## Development Status
 
 ### Implemented ✅
