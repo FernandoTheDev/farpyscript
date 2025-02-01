@@ -1,73 +1,72 @@
 # FarpyScript
 
 <div align="center">
- <img src="/images/logo.png" width="300" heigth="300">
+ <img src="/images/logo.png" width="300" height="300">
 </div>
 
-[![Versão](https://img.shields.io/badge/versão-0.0.1--alpha-blue.svg)](https://github.com/seu-usuario/farpyscript)
+[![Version](https://img.shields.io/badge/version-0.0.1--alpha-blue.svg)](https://github.com/your-username/farpyscript)
 
-FarpyScript é uma linguagem de programação interpretada experimental, focada em segurança e desenvolvida como um projeto educacional de código aberto.
+FarpyScript is an experimental interpreted programming language focused on security, developed as an open-source educational project.
 
-## Versão Atual
+## Current Version
 
-- **Versão**: 0.0.1-alpha
-- **Status**: Desenvolvimento inicial
-- **Última atualização**: Janeiro 2025
+- **Version**: 0.0.1-alpha  
+- **Status**: Early development  
+- **Last update**: January 2025  
 
-## Visão Geral
+## Overview
 
-FarpyScript nasceu da curiosidade em entender o funcionamento interno das linguagens de programação. O projeto visa proporcionar uma experiência prática no desenvolvimento de interpretadores, sendo construído completamente do zero.
+FarpyScript was born out of curiosity about the inner workings of programming languages. The project aims to provide hands-on experience in interpreter development, being built completely from scratch.
 
-Inspirado parcialmente pelo projeto [guide-to-interpreters-series](https://github.com/tlaceby/guide-to-interpreters-series), o FarpyScript implementa um parser recursivo descendente, ideal para fins educacionais e projetos de pequena escala.
+Partially inspired by the [guide-to-interpreters-series](https://github.com/tlaceby/guide-to-interpreters-series) project, FarpyScript implements a recursive descent parser, ideal for educational purposes and small-scale projects.
 
-## Status do Desenvolvimento
+## Development Status
 
-### Implementado ✅
-- Lexer (Analisador Léxico)
-- Sistema de tratamento de erros verboso
+### Implemented ✅
+- Lexer (Lexical Analyzer)  
+- Verbose error handling system  
 
-### Em Desenvolvimento 🚧
-- Parser (Analisador Sintático)
-- Sistema de tipos
-  - Variáveis mutáveis e imutáveis
-  - Tipagem forte
-  - Tipos complexos (objetos, arrays, vetores)
-- Funcionalidades da Linguagem
-  - Declaração e chamada de funções
-  - Recursão
-  - Redeclaração de variáveis
-  - Estruturas de controle de fluxo (if, for, while, try/catch)
-- Bibliotecas Nativas
-  - I/O
-  - Matemática
-  - HTTP
-  - Constantes built-in
+### In Progress 🚧
+- Parser (Syntax Analyzer)  
+- Type System  
+  - Mutable and immutable variables  
+  - Strong typing  
+  - Complex types (objects, arrays, vectors)  
+- Language Features  
+  - Function declaration and calls  
+  - Recursion  
+  - Variable redeclaration  
+  - Control flow structures (if, for, while, try/catch)  
+- Native Libraries  
+  - I/O  
+  - Math  
+  - HTTP  
+  - Built-in constants  
 
-## Arquitetura
+## Architecture
 
-O interpretador utiliza uma arquitetura de parser recursivo descendente, escolhida por sua:
-- Simplicidade de implementação
-- Facilidade de compreensão
-- Adequação para propósitos educacionais
+The interpreter follows a recursive descent parser architecture, chosen for its:  
+- Simplicity of implementation  
+- Ease of understanding  
+- Suitability for educational purposes  
 
-## Como Contribuir
+## How to Contribute
 
-Suas contribuições são bem-vindas! Para contribuir:
+Your contributions are welcome! To contribute:  
 
-1. Fork o repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/NovaFeature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/NovaFeature`)
-5. Abra um Pull Request
+1. Fork the repository  
+2. Create a branch for your feature (`git checkout -b feature/NewFeature`)  
+3. Commit your changes (`git commit -m 'Add new feature'`)  
+4. Push to the branch (`git push origin feature/NewFeature`)  
+5. Open a Pull Request  
 
-Todas as PRs serão revisadas pelo mantenedor principal (fernandothedev).
+All PRs will be reviewed by the main maintainer (fernandothedev).  
 
-## Licença
+## License
 
-MIT License
+MIT License  
 
-Copyright (c) 2025 FarpyScript
-
+```
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -85,7 +84,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
 
 ---
 
-📝 Note: Este é um projeto experimental em desenvolvimento ativo. Contribuições e feedback são sempre bem-vindos!
+📝 **Note**: This is an experimental project under active development. Contributions and feedback are always welcome!
