@@ -29,6 +29,7 @@ export enum TokenType {
     MINUS, // -
     SLASH, // /
     ASTERISK, // *
+    EXPONENTIATION, // **
     PERCENT, // %
     EQUALS_EQUALS, // ==
     NOT_EQUALS, // !=
