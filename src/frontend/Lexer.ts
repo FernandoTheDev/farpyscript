@@ -119,7 +119,20 @@ export class Lexer {
                 continue;
             }
 
+            /** TODO: Fix the bug
+             * EX: 2**2 // ERROR
+             * EX: 2 ** 2 // OK
+             */
             if (char === "*") {
+                this.offset++;
+                // EXPONENTIATION
+                if (this.source[this.offset] === "*") {
+                    this.createToken(
+                        TokenType.EXPONENTIATION,
+                        "**",
+                    );
+                    continue;
+                }
                 this.createToken(
                     TokenType.ASTERISK,
                     char,
@@ -337,7 +350,7 @@ export class Lexer {
                 if (number.includes(".")) {
                     this.createToken(
                         TokenType.FLOAT,
-                        number,
+                        Number(number),
                     );
                     continue;
                 }
@@ -352,7 +365,7 @@ export class Lexer {
 
                 this.createToken(
                     TokenType.INT,
-                    number,
+                    Number(number),
                 );
                 continue;
             }
@@ -366,6 +379,7 @@ export class Lexer {
                     this.offset < this.source.length &&
                     this.isAlphaNumeric(this.source[this.offset])
                 ) {
+                    console.log(this.source[this.offset]);
                     id += this.source[this.offset];
                     this.offset++;
                 }
@@ -380,6 +394,7 @@ export class Lexer {
                 this.createToken(
                     TokenType.IDENTIFIER,
                     id,
+                    false,
                 );
                 continue;
             }

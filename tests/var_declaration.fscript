@@ -1,0 +1,6 @@
+new x: int = 10
+new x: float = 10.1
+new x: binary = 0b10
+new x: string = "10"
+new x: null = null
+
