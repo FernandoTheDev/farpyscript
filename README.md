@@ -1,5 +1,9 @@
 # FarpyScript
 
+<div align="center">
+ <img src="/assets/logo.png" width="300" heigth="300">
+</div>
+
 [![Versão](https://img.shields.io/badge/versão-0.0.1--alpha-blue.svg)](https://github.com/seu-usuario/farpyscript)
 
 FarpyScript é uma linguagem de programação interpretada experimental, focada em segurança e desenvolvida como um projeto educacional de código aberto.
