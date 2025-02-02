@@ -1,5 +1,5 @@
-new x : int = 10 * 0.01 - -1 // Comment
+new mut x: int = 10
 
-new binary : binary = 0b101 // Binary
+x = x + 1
 
 // deno run -A main.ts examples/var_declaration.fscript

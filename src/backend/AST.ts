@@ -4,6 +4,7 @@ import { TypesNative } from "../runtime/Values.ts";
 export type NodeType =
     | "Program"
     | "VarDeclaration"
+    | "AssignmentDeclaration"
     | "Identifier"
     | "IntLiteral"
     | "FloatLiteral"
@@ -14,7 +15,8 @@ export type NodeType =
 
 export interface Stmt {
     kind: NodeType;
-    type?: TypesNative;
+    type: TypesNative | TypesNative[];
+    // deno-lint-ignore no-explicit-any
     value: any;
     loc: Loc;
 }
@@ -42,7 +44,7 @@ export interface Identifier extends Expr {
 export function AST_IDENTIFIER(id: string = "err", loc: Loc): Identifier {
     return {
         kind: "Identifier",
-        type: "string",
+        type: "id",
         value: id,
         loc: loc,
     } as Identifier;
@@ -123,10 +125,18 @@ export function AST_NULL(loc: Loc): NullLiteral {
 // new age: int = 17 | new mut name: string = "Fernando"
 export interface VarDeclaration extends Stmt {
     kind: "VarDeclaration";
-    type: TypesNative; // Type of variable
+    type: TypesNative | TypesNative[]; // Type of variable
     id: Identifier;
     value: Stmt;
     constant: boolean;
+}
+
+// name = "Trump"
+export interface AssignmentDeclaration extends Stmt {
+    kind: "AssignmentDeclaration";
+    type: TypesNative; // Type of variable
+    id: Identifier;
+    value: Stmt;
 }
 
 // }}

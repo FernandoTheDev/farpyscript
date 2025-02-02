@@ -17,7 +17,6 @@ export enum TokenType {
     STRING, // "omg"
     INT, // 10
     FLOAT, // 10.1
-    BOOL, // true || false
     NULL, // null
 
     // Especials
@@ -39,6 +38,7 @@ export enum TokenType {
     LESS_THAN_OR_EQUALS, // <=
     AND, // &&
     OR, // ||
+    PIPE, // | // new x: <T> | <T> = <EXPR>
     COMMA, // ,
     COLON, // :
     SEMICOLON, // ;
@@ -78,4 +78,5 @@ export const Keywords: Record<string, TokenType> = {
     "while": TokenType.WHILE,
     "import": TokenType.IMPORT,
     "as": TokenType.AS,
+    "null": TokenType.NULL,
 };

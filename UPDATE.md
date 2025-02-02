@@ -1,52 +1,42 @@
 # Features
 
-## Parser
-
-Now the language has a simple parser, which handles declarations, types, unit values, binary expressions and much more in the future.
-
-## Binary Expr
-
+## Constants
 ```
-10 - 10
-10 ** 2
-2 - -2 // 2 - (-2) in math
-10 * (9 - (2 ** 3))
-90 / 9
-10 % 3
-10 - x
+true
+false
+null
+PI // Will be moved to a Math module
 ```
 
-## Natives Types
-
+## Pipes when typing a variable
 ```
-string "Fernando"
-int 17
-bool // in developement
-null null
-float 0.1
-binary 0b1001 // It has a parser to validate
+new <ID>: <TYPES> = <EXPR>
+
+new x: int | float = 2 ** PI
 ```
 
-## Declarations
+## Redeclaration of variables
+```
+ERROR
+new x: bool = true
+x = false // ERROR: Constant redeclaration 'x'.
 
-### VarDeclaration
+new mut x: int = "Str" // ERROR: Invalid type from value of variable
+
+new mut x: int = 10
+x = 0b10 // ERROR: Invalid type from value of variable, expected int receive binary
+
+OK
+new mut x: int | float = 100
+x = PI
+```
+
+## Native binary value
+
+It is now possible to represent binary directly
 
 ```
-new <MUT> <NAME>: <T> = <EXPR>
-```
-
-Examples:
-
-```
-new x = 10 // Error, type is not declared
-new x: int = 10 // constant, ok
-new mut x: int = 20 // mutable, ok
-
-new x: string = "Fernando"
-
-new x: binary = 0b1000101 // OK
-new x: binary = 0b1000102 // ERROR: Invalid binary
-new x: binary = 00b01 // ERROR: Invalid binary
-
-new balance: float = 1512.21
+new myBynary: bynary = 0b100 // OK
+new myBynary: bynary = 0b102 // ERROR: Invalid binary
+new myBynary: bynary = 00b10 // ERROR: Invalid binary
 ```

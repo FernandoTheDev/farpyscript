@@ -2,7 +2,6 @@ import { Keywords, Loc, NativeValue, Token, TokenType } from "./Token.ts";
 import { ErrorReporter } from "../error/ErrorReporter.ts";
 
 export class Lexer {
-    private error: ErrorReporter;
     private source: string;
     private file: string;
     protected line: number = 1;
@@ -14,7 +13,6 @@ export class Lexer {
     public constructor(file: string, source: string) {
         this.file = file;
         this.source = source;
-        this.error = new ErrorReporter();
     }
 
     public tokenize(): Token[] {
@@ -93,7 +91,7 @@ export class Lexer {
                     if (this.offset < this.source.length) {
                         this.offset += 2;
                     } else {
-                        this.error.showError(
+                        ErrorReporter.showError(
                             "Unclosed block comment",
                             this.getLocation(this.start, this.offset),
                         );
@@ -211,6 +209,11 @@ export class Lexer {
                     );
                     continue;
                 }
+                this.createToken(
+                    TokenType.PIPE,
+                    "|",
+                );
+                continue;
             }
 
             if (char === "&") {
@@ -292,7 +295,7 @@ export class Lexer {
                 }
 
                 if (this.source[this.offset] !== '"') {
-                    this.error.showError(
+                    ErrorReporter.showError(
                         "String not closed.",
                         this.getLocation(
                             this.start,
@@ -351,6 +354,7 @@ export class Lexer {
                     this.createToken(
                         TokenType.FLOAT,
                         Number(number),
+                        false,
                     );
                     continue;
                 }
@@ -359,6 +363,7 @@ export class Lexer {
                     this.createToken(
                         TokenType.BINARY,
                         number,
+                        false,
                     );
                     continue;
                 }
@@ -366,6 +371,7 @@ export class Lexer {
                 this.createToken(
                     TokenType.INT,
                     Number(number),
+                    false,
                 );
                 continue;
             }
@@ -379,7 +385,6 @@ export class Lexer {
                     this.offset < this.source.length &&
                     this.isAlphaNumeric(this.source[this.offset])
                 ) {
-                    console.log(this.source[this.offset]);
                     id += this.source[this.offset];
                     this.offset++;
                 }
@@ -391,6 +396,23 @@ export class Lexer {
                     );
                     continue;
                 }
+
+                // if (id.toLowerCase() == "true" || id.toLowerCase() == "false") {
+                //     this.createToken(
+                //         TokenType.BOOL,
+                //         id,
+                //     );
+                //     continue;
+                // }
+
+                // if (id.toLowerCase() == "null") {
+                //     this.createToken(
+                //         TokenType.NULL,
+                //         id,
+                //     );
+                //     continue;
+                // }
+
                 this.createToken(
                     TokenType.IDENTIFIER,
                     id,
@@ -400,7 +422,7 @@ export class Lexer {
             }
 
             // If the character is not valid, it shows an error
-            this.error.showError(
+            ErrorReporter.showError(
                 `Invalid char '${char}'`,
                 this.getLocation(this.start, this.start + char.length),
             );
