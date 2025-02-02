@@ -2,7 +2,7 @@ import { Colorize } from "../utils/Colorize.ts";
 import { Loc } from "../frontend/Token.ts";
 
 export class ErrorReporter {
-    public showError(message: string, loc: Loc): void {
+    public static showError(message: string, loc: Loc): void {
         this.displayErrorHeader(message, loc);
         this.displayLineWithError(
             loc.line,
@@ -12,7 +12,7 @@ export class ErrorReporter {
         );
     }
 
-    private displayErrorHeader(message: string, loc: Loc): void {
+    private static displayErrorHeader(message: string, loc: Loc): void {
         console.error(
             Colorize.bold(
                 `${Colorize.red("error")}: ${Colorize.bold(message)}`,
@@ -25,7 +25,7 @@ export class ErrorReporter {
         );
     }
 
-    private displayLineWithError(
+    private static displayLineWithError(
         lineNumber: number,
         lineContent: string,
         start: number,

@@ -1,6 +1,7 @@
 import { Loc, Token, TokenType } from "../frontend/Token.ts";
 import { ErrorReporter } from "../error/ErrorReporter.ts";
 import {
+    AssignmentDeclaration,
     AST_BINARY,
     AST_FLOAT,
     AST_IDENTIFIER,
@@ -16,15 +17,13 @@ import {
     Stmt,
     VarDeclaration,
 } from "./AST.ts";
-import { TypesNative } from "../runtime/Values.ts";
+import { TypesNative, TypesNativeArray } from "../runtime/Values.ts";
 
 export default class Parser {
     private tokens: Token[];
-    private error: ErrorReporter;
 
     public constructor(tokens: Token[]) {
         this.tokens = tokens;
-        this.error = new ErrorReporter();
     }
 
     private is_end(index: number = 0): boolean {
@@ -58,7 +57,7 @@ export default class Parser {
             }
         }
 
-        this.error.showError(err, prev.loc);
+        ErrorReporter.showError(err, prev.loc);
         return {} as Token;
     }
 
@@ -96,9 +95,17 @@ export default class Parser {
             const operatorToken = this.eat();
             const operator: string = operatorToken.value?.toString() ?? "ERROR";
             const right: Expr = this.parse_mul_expr();
+            let type: TypesNative = "int";
+
+            if (left.type == "int" && right.type == "int") type = "int";
+            if (left.type == "float" || right.type == "float") type = "float";
+            if (left.type == "string" || right.type == "string") {
+                type = "string";
+            }
 
             left = {
                 kind: "BinaryExpr",
+                type: type,
                 left,
                 right,
                 operator,
@@ -116,9 +123,17 @@ export default class Parser {
             const operatorToken = this.eat();
             const operator: string = operatorToken.value?.toString() ?? "ERROR";
             const right: Expr = this.parse_mul_expr();
+            let type: TypesNative = "int";
+
+            if (left.type == "int" && right.type == "int") type = "int";
+            if (left.type == "float" || right.type == "float") type = "float";
+            if (left.type == "string" || right.type == "string") {
+                type = "string";
+            }
 
             left = {
                 kind: "BinaryExpr",
+                type: type,
                 left,
                 right,
                 operator,
@@ -145,9 +160,17 @@ export default class Parser {
             const operatorToken = this.eat();
             const operator: string = operatorToken.value?.toString() ?? "ERROR";
             const right: Expr = this.parse_mul_expr();
+            let type: TypesNative = "int";
+
+            if (left.type == "int" && right.type == "int") type = "int";
+            if (left.type == "float" || right.type == "float") type = "float";
+            if (left.type == "string" || right.type == "string") {
+                type = "string";
+            }
 
             left = {
                 kind: "BinaryExpr",
+                type: type,
                 left,
                 right,
                 operator,
@@ -190,7 +213,10 @@ export default class Parser {
 
         switch (token.kind) {
             case TokenType.IDENTIFIER: {
-                this.eat();
+                if (this.next().kind == TokenType.EQUALS) { // =
+                    return this.parse_assignment_declaration();
+                }
+                this.eat(); // ID
                 return AST_IDENTIFIER(token.value as string, token.loc);
             }
             case TokenType.INT: {
@@ -229,7 +255,7 @@ export default class Parser {
             case TokenType.NEW:
                 return this.parse_var_declaration();
             default:
-                this.error.showError(
+                ErrorReporter.showError(
                     "Unexpected token found during parsing!",
                     token.loc,
                 );
@@ -240,7 +266,7 @@ export default class Parser {
     private parseBinaryLiteral(): BinaryLiteral {
         const token: Token = this.eat();
         if (/^0b[01]+$/.test(token.value as string) == false) {
-            this.error.showError("Invalid binary value.", token.loc);
+            ErrorReporter.showError("Invalid binary value.", token.loc);
             Deno.exit();
         }
         return AST_BINARY(token.value as string, token.loc);
@@ -251,7 +277,7 @@ export default class Parser {
     private parse_var_declaration(): VarDeclaration {
         const startToken = this.eat(); // new
         let is_const: boolean = true;
-        let type: TypesNative = "null";
+        const types: TypesNative[] = [];
 
         if (this.peek().kind === TokenType.MUT) {
             this.eat();
@@ -265,26 +291,64 @@ export default class Parser {
 
         this.consume(TokenType.COLON, "Expected ':'."); // :
 
-        type = this.consume(
-            TokenType.IDENTIFIER,
-            "The type of the variable was expected but was not passed.",
-        ).value as TypesNative;
+        // new
+        while (this.peek().kind !== TokenType.EQUALS) {
+            const type_tk: Token = this.consume(
+                TokenType.IDENTIFIER,
+                "The type of the variable was expected but was not passed.",
+            );
+            const type: TypesNative = type_tk.value as TypesNative;
+
+            if (!TypesNativeArray.includes(type)) {
+                ErrorReporter.showError("Invalid type.", type_tk.loc);
+                Deno.exit();
+            }
+
+            types.push(type);
+
+            if (this.peek().kind == TokenType.PIPE) {
+                this.eat(); // |
+                if (this.peek().kind == TokenType.EQUALS) {
+                    ErrorReporter.showError(
+                        "'=' is not expected after '|'",
+                        this.peek().loc,
+                    );
+                    Deno.exit();
+                }
+                continue;
+            }
+        }
 
         this.consume(TokenType.EQUALS, "Expected '='.");
-
         const value = this.parse_expr();
-
-        // TODO: Lacks support for BinaryExpr
-        // this.validateType(value, type);
+        if (value.kind != "Identifier") this.validateType(value, types);
 
         return {
             kind: "VarDeclaration",
-            type: type,
+            type: types,
             id: AST_IDENTIFIER(idToken.value as string, idToken.loc),
             value,
             constant: is_const,
             loc: this.getLocationFromTokens(startToken, value.loc),
         } as VarDeclaration;
+    }
+
+    private parse_assignment_declaration(): AssignmentDeclaration {
+        const idToken = this.consume(
+            TokenType.IDENTIFIER,
+            "The name must be an IDENTIFIER.",
+        );
+
+        this.consume(TokenType.EQUALS, "Expected '='.");
+        const value = this.parse_expr();
+
+        return {
+            kind: "AssignmentDeclaration",
+            type: value.type,
+            id: AST_IDENTIFIER(idToken.value as string, idToken.loc),
+            value,
+            loc: this.getLocationFromTokens(idToken, value.loc),
+        } as AssignmentDeclaration;
     }
 
     private parseNegativeValue(): IntLiteral | FloatLiteral {
@@ -301,21 +365,22 @@ export default class Parser {
             return AST_FLOAT(-Number(numToken.value), numToken.loc);
         }
 
-        this.error.showError(
+        ErrorReporter.showError(
             "Unexpected token found during parsing!",
             this.next().loc,
         );
         Deno.exit(1);
     }
 
-    // TODO: Lacks support for BinaryExpr
-    private validateType(value: Stmt, type: TypesNative): boolean {
-        if (value.type != type) {
-            this.error.showError(
-                `The expected type does not match the type of the value. Expected ${type} and received ${value.type}.`,
+    private validateType(value: Stmt, type: TypesNative[]): boolean {
+        if (!type.includes(value.type as TypesNative)) {
+            ErrorReporter.showError(
+                `The expected type does not match the type of the value. Expected one of ${
+                    type.join(", ")
+                } and received ${value.type}.`,
                 value.loc,
             );
-            Deno.exit();
+            Deno.exit(1);
         }
         return true;
     }
