@@ -49,6 +49,8 @@ In the future, binary with path will come
 - Type System  
   - Mutable and immutable variables  
   - Strong typing  
+  - Variable redeclaration  
+ - Built-in constants  
 
 ### In Progress 🚧
 
@@ -58,7 +60,6 @@ In the future, binary with path will come
 - Language Features  
   - Function declaration and calls  
   - Recursion  
-  - Variable redeclaration  
   - Control flow structures (if, for, while, try/catch)  
 - Native Libraries  
   - I/O  
