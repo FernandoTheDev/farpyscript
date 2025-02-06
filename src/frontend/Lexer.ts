@@ -9,6 +9,37 @@ export class Lexer {
     protected lineOffset: number = 0; // Offset relative to current line
     protected start: number = 0;
     protected tokens: Token[] = [];
+    private static SINGLE_CHAR_TOKENS: { [key: string]: TokenType } = {
+        "+": TokenType.PLUS,
+        "-": TokenType.MINUS,
+        "*": TokenType.ASTERISK,
+        "/": TokenType.SLASH,
+        ">": TokenType.GREATER_THAN,
+        "<": TokenType.LESS_THAN,
+        ",": TokenType.COMMA,
+        ";": TokenType.SEMICOLON,
+        ":": TokenType.COLON,
+        "(": TokenType.LPAREN,
+        ")": TokenType.RPAREN,
+        "{": TokenType.LBRACE,
+        "}": TokenType.RBRACE,
+        ".": TokenType.DOT,
+        "%": TokenType.PERCENT,
+        "|": TokenType.PIPE,
+        "=": TokenType.EQUALS,
+    };
+    private static MULTI_CHAR_TOKENS: { [key: string]: TokenType } = {
+        "++": TokenType.INCREMENT,
+        "--": TokenType.DECREMENT,
+        "**": TokenType.EXPONENTIATION,
+        "%%": TokenType.REMAINDER,
+        "==": TokenType.EQUALS_EQUALS,
+        ">=": TokenType.GREATER_THAN_OR_EQUALS,
+        "<=": TokenType.LESS_THAN_OR_EQUALS,
+        "&&": TokenType.AND,
+        "||": TokenType.OR,
+        "!=": TokenType.NOT_EQUALS,
+    };
 
     public constructor(file: string, source: string) {
         this.file = file;
@@ -32,392 +63,46 @@ export class Lexer {
                 continue;
             }
 
-            if (char === "+") {
-                this.createToken(
-                    TokenType.PLUS,
-                    char,
-                );
+            const muti = char.concat(this.source[this.offset + 1]);
+            const multiTokenType = Lexer
+                .MULTI_CHAR_TOKENS[
+                    muti
+                ];
+
+            if (multiTokenType) {
+                this.offset++; // skip second char
+                this.createToken(multiTokenType, muti);
                 continue;
             }
 
-            if (char === ",") {
-                this.createToken(
-                    TokenType.COMMA,
-                    char,
-                );
-                continue;
-            }
+            const singleTokenType = Lexer.SINGLE_CHAR_TOKENS[char];
 
-            if (char === ";") {
-                this.createToken(
-                    TokenType.SEMICOLON,
-                    char,
-                );
-                continue;
-            }
-
-            if (char === ":") {
-                this.createToken(
-                    TokenType.COLON,
-                    char,
-                );
+            if (singleTokenType) {
+                this.createToken(singleTokenType, char);
                 continue;
             }
 
             if (char === "/") {
-                this.offset++;
-                if (this.source[this.offset] === "/") {
-                    this.offset++;
-                    while (
-                        this.offset < this.source.length &&
-                        this.source[this.offset] !== "\n"
-                    ) {
-                        this.offset++;
-                    }
-                    continue;
-                } else if (this.source[this.offset] === "*") {
-                    this.offset++;
-                    while (
-                        this.offset < this.source.length &&
-                        !(this.source[this.offset] === "*" &&
-                            this.source[this.offset + 1] === "/")
-                    ) {
-                        if (this.source[this.offset] === "\n") {
-                            this.line++;
-                            this.lineOffset = this.offset + 1;
-                        }
-                        this.offset++;
-                    }
-                    if (this.offset < this.source.length) {
-                        this.offset += 2;
-                    } else {
-                        ErrorReporter.showError(
-                            "Unclosed block comment",
-                            this.getLocation(this.start, this.offset),
-                        );
-                        return [];
-                    }
-                    continue;
-                } else {
-                    // Normal slash
-                    this.createToken(
-                        TokenType.SLASH,
-                        char,
-                        false,
-                    );
-                    continue;
-                }
-            }
-
-            if (char === "-") {
-                this.createToken(
-                    TokenType.MINUS,
-                    char,
-                );
-                continue;
-            }
-
-            /** TODO: Fix the bug
-             * EX: 2**2 // ERROR
-             * EX: 2 ** 2 // OK
-             */
-            if (char === "*") {
-                this.offset++;
-                // EXPONENTIATION
-                if (this.source[this.offset] === "*") {
-                    this.createToken(
-                        TokenType.EXPONENTIATION,
-                        "**",
-                    );
-                    continue;
-                }
-                this.createToken(
-                    TokenType.ASTERISK,
-                    char,
-                );
-                continue;
-            }
-
-            if (char === "%") {
-                this.createToken(
-                    TokenType.PERCENT,
-                    char,
-                );
-                continue;
-            }
-
-            if (char === "=") {
-                this.offset++;
-                if (this.source[this.offset] === "=") {
-                    this.createToken(
-                        TokenType.EQUALS_EQUALS,
-                        "==",
-                    );
-                    continue;
-                }
-
-                this.createToken(
-                    TokenType.EQUALS,
-                    "=",
-                    false,
-                );
-                continue;
-            }
-
-            if (char === ">") {
-                this.offset++;
-                if (this.source[this.offset] === "=") {
-                    this.createToken(
-                        TokenType.GREATER_THAN_OR_EQUALS,
-                        ">=",
-                    );
-                    continue;
-                }
-
-                this.createToken(
-                    TokenType.GREATER_THAN,
-                    ">",
-                    false,
-                );
-                continue;
-            }
-
-            if (char === "<") {
-                this.offset++;
-                if (this.source[this.offset] === "=") {
-                    this.createToken(
-                        TokenType.LESS_THAN_OR_EQUALS,
-                        "<=",
-                    );
-                    continue;
-                }
-
-                this.createToken(
-                    TokenType.LESS_THAN,
-                    "<",
-                    false,
-                );
-                continue;
-            }
-
-            if (char === "|") {
-                this.offset++;
-                if (this.source[this.offset] === "|") {
-                    this.createToken(
-                        TokenType.OR,
-                        "||",
-                    );
-                    continue;
-                }
-                this.createToken(
-                    TokenType.PIPE,
-                    "|",
-                );
-                continue;
-            }
-
-            if (char === "&") {
-                this.offset++;
-                if (this.source[this.offset] === "&") {
-                    this.createToken(
-                        TokenType.AND,
-                        "&&",
-                    );
-                    continue;
-                }
-            }
-
-            if (char === "!") {
-                this.offset++;
-                if (this.source[this.offset] === "=") {
-                    this.createToken(
-                        TokenType.NOT_EQUALS,
-                        "!=",
-                    );
-                    continue;
-                }
-            }
-
-            if (char === "(") {
-                this.createToken(
-                    TokenType.LPAREN,
-                    char,
-                );
-                continue;
-            }
-
-            if (char === ")") {
-                this.createToken(
-                    TokenType.RPAREN,
-                    char,
-                );
-                continue;
-            }
-
-            if (char === "{") {
-                this.createToken(
-                    TokenType.LBRACE,
-                    char,
-                );
-                continue;
-            }
-
-            if (char === "}") {
-                this.createToken(
-                    TokenType.RBRACE,
-                    char,
-                );
-                continue;
-            }
-
-            if (char === ".") {
-                this.createToken(
-                    TokenType.DOT,
-                    char,
-                );
+                this.lexing_comment();
                 continue;
             }
 
             // Checks if it is a string (unclosed string error)
             if (char === '"') {
-                let value = "";
-                this.offset++; // jump "
-
-                while (
-                    this.offset < this.source.length &&
-                    this.source[this.offset] !== '"'
-                ) {
-                    if (this.source[this.offset] == "\n") {
-                        break;
-                    }
-                    value += this.source[this.offset];
-                    this.offset++;
-                }
-
-                if (this.source[this.offset] !== '"') {
-                    ErrorReporter.showError(
-                        "String not closed.",
-                        this.getLocation(
-                            this.start,
-                            this.start + value.length + 1,
-                        ),
-                    );
-                    return [];
-                }
-
-                this.createToken(
-                    TokenType.STRING,
-                    value,
-                );
+                this.lexing_string();
                 continue;
             }
 
             // Check if it is a number (int, float or binary)
             if (this.isDigit(char)) {
-                let number = "";
-
-                while (
-                    this.offset < this.source.length &&
-                    this.isDigit(this.source[this.offset])
-                ) {
-                    number += this.source[this.offset];
-                    this.offset++;
-                }
-
-                // Check if is a float
-                if (this.source[this.offset] === ".") {
-                    number += this.source[this.offset];
-                    this.offset++;
-                    while (
-                        this.offset < this.source.length &&
-                        this.isDigit(this.source[this.offset])
-                    ) {
-                        number += this.source[this.offset];
-                        this.offset++;
-                    }
-                }
-
-                // Check if is a binary
-                if (this.source[this.offset] === "b") {
-                    number += this.source[this.offset];
-                    this.offset++;
-                    while (
-                        this.offset < this.source.length &&
-                        this.isDigit(this.source[this.offset])
-                    ) {
-                        number += this.source[this.offset];
-                        this.offset++;
-                    }
-                }
-
-                if (number.includes(".")) {
-                    this.createToken(
-                        TokenType.FLOAT,
-                        Number(number),
-                        false,
-                    );
-                    continue;
-                }
-
-                if (number.includes("b")) {
-                    this.createToken(
-                        TokenType.BINARY,
-                        number,
-                        false,
-                    );
-                    continue;
-                }
-
-                this.createToken(
-                    TokenType.INT,
-                    Number(number),
-                    false,
-                );
+                this.lexing_digit();
                 continue;
             }
 
             // Fernand0
             // print
             if (this.isAlphaNumeric(char)) {
-                let id = "";
-
-                while (
-                    this.offset < this.source.length &&
-                    this.isAlphaNumeric(this.source[this.offset])
-                ) {
-                    id += this.source[this.offset];
-                    this.offset++;
-                }
-
-                if (Keywords[id] !== undefined) {
-                    this.createToken(
-                        Keywords[id],
-                        id,
-                    );
-                    continue;
-                }
-
-                // if (id.toLowerCase() == "true" || id.toLowerCase() == "false") {
-                //     this.createToken(
-                //         TokenType.BOOL,
-                //         id,
-                //     );
-                //     continue;
-                // }
-
-                // if (id.toLowerCase() == "null") {
-                //     this.createToken(
-                //         TokenType.NULL,
-                //         id,
-                //     );
-                //     continue;
-                // }
-
-                this.createToken(
-                    TokenType.IDENTIFIER,
-                    id,
-                    false,
-                );
+                this.lexing_alphanumeric();
                 continue;
             }
 
@@ -426,7 +111,7 @@ export class Lexer {
                 `Invalid char '${char}'`,
                 this.getLocation(this.start, this.start + char.length),
             );
-            return [];
+            Deno.exit(1);
         }
 
         this.createToken(
@@ -435,6 +120,171 @@ export class Lexer {
         );
 
         return this.tokens;
+    }
+
+    private lexing_alphanumeric(): void {
+        let id = "";
+
+        while (
+            this.offset < this.source.length &&
+            this.isAlphaNumeric(this.source[this.offset])
+        ) {
+            id += this.source[this.offset];
+            this.offset++;
+        }
+
+        if (Keywords[id] !== undefined) {
+            this.createToken(
+                Keywords[id],
+                id,
+            );
+        } else {
+            this.createToken(
+                TokenType.IDENTIFIER,
+                id,
+                false,
+            );
+        }
+    }
+
+    private lexing_digit(): void {
+        let number = "";
+
+        while (
+            this.offset < this.source.length &&
+            this.isDigit(this.source[this.offset])
+        ) {
+            number += this.source[this.offset];
+            this.offset++;
+        }
+
+        // Check if is a float
+        if (this.source[this.offset] === ".") {
+            number += this.source[this.offset];
+            this.offset++;
+            while (
+                this.offset < this.source.length &&
+                this.isDigit(this.source[this.offset])
+            ) {
+                number += this.source[this.offset];
+                this.offset++;
+            }
+        }
+
+        // Check if is a binary
+        if (this.source[this.offset] === "b") {
+            number += this.source[this.offset];
+            this.offset++;
+            while (
+                this.offset < this.source.length &&
+                this.isDigit(this.source[this.offset])
+            ) {
+                number += this.source[this.offset];
+                this.offset++;
+            }
+        }
+
+        if (number.includes(".")) {
+            this.createToken(
+                TokenType.FLOAT,
+                Number(number),
+                false,
+            );
+            return;
+        }
+
+        if (number.includes("b")) {
+            this.createToken(
+                TokenType.BINARY,
+                number,
+                false,
+            );
+            return;
+        }
+
+        this.createToken(
+            TokenType.INT,
+            Number(number),
+            false,
+        );
+    }
+
+    private lexing_string(): void {
+        let value = "";
+        this.offset++; // jump "
+
+        while (
+            this.offset < this.source.length &&
+            this.source[this.offset] !== '"'
+        ) {
+            if (this.source[this.offset] == "\n") {
+                break;
+            }
+            value += this.source[this.offset];
+            this.offset++;
+        }
+
+        if (this.source[this.offset] !== '"') {
+            ErrorReporter.showError(
+                "String not closed.",
+                this.getLocation(
+                    this.start,
+                    this.start + value.length + 1,
+                ),
+            );
+            Deno.exit(1);
+        }
+
+        this.createToken(
+            TokenType.STRING,
+            value,
+        );
+    }
+
+    private lexing_comment(): void {
+        this.offset++;
+
+        if (this.source[this.offset] === "/") {
+            this.offset++;
+            while (
+                this.offset < this.source.length &&
+                this.source[this.offset] !== "\n"
+            ) {
+                this.offset++;
+            }
+            return;
+        }
+
+        if (this.source[this.offset] === "*") {
+            this.offset++;
+            while (
+                this.offset < this.source.length &&
+                !(this.source[this.offset] === "*" &&
+                    this.source[this.offset + 1] === "/")
+            ) {
+                if (this.source[this.offset] === "\n") {
+                    this.line++;
+                    this.lineOffset = this.offset + 1;
+                }
+                this.offset++;
+            }
+            if (this.offset < this.source.length) {
+                this.offset += 2;
+            } else {
+                ErrorReporter.showError(
+                    "Unclosed block comment",
+                    this.getLocation(this.start, this.offset),
+                );
+                Deno.exit(1);
+            }
+            return;
+        }
+
+        ErrorReporter.showError(
+            "Unexpected character after '/'",
+            this.getLocation(this.start, this.offset),
+        );
+        Deno.exit(1);
     }
 
     private isAlphaNumeric(token: string): boolean {

@@ -1,54 +1,57 @@
 export enum TokenType {
     // Keywords
-    NEW, // new x = EXPR
-    MUT, // new mut x = EXPR
-    IF, // if
-    ELSE, // else
-    FOR, // for
-    WHILE, // while
-    FN, // fn x() {}
-    RETURN, // return EXPR
-    IMPORT, // import x
-    AS, // import x as y
+    NEW, // new x = EXPR 0
+    MUT, // new mut x = EXPR 1
+    IF, // if 2
+    ELSE, // else 3
+    FOR, // for 4
+    WHILE, // while 5
+    FN, // fn x() {} 6
+    RETURN, // return EXPR 7
+    IMPORT, // import x 8
+    AS, // import x as y 9
 
-    IDENTIFIER, // omg
+    IDENTIFIER, // omg 10
 
     // Types
-    STRING, // "omg"
-    INT, // 10
-    FLOAT, // 10.1
-    NULL, // null
+    STRING, // "omg" 11
+    INT, // 10 12
+    FLOAT, // 10.1 13
+    NULL, // null 14
 
     // Especials
-    BINARY,
+    BINARY, // 15
 
     // Symbols
-    EQUALS, // =
-    PLUS, // +
-    MINUS, // -
-    SLASH, // /
-    ASTERISK, // *
-    EXPONENTIATION, // **
-    PERCENT, // %
-    EQUALS_EQUALS, // ==
-    NOT_EQUALS, // !=
-    GREATER_THAN, // >
-    LESS_THAN, // <
-    GREATER_THAN_OR_EQUALS, // >=
-    LESS_THAN_OR_EQUALS, // <=
-    AND, // &&
-    OR, // ||
-    PIPE, // | // new x: <T> | <T> = <EXPR>
-    COMMA, // ,
-    COLON, // :
-    SEMICOLON, // ;
-    DOT, // .
-    LPAREN, // (
-    RPAREN, // )
-    LBRACE, // {
-    RBRACE, // }
+    EQUALS, // = 16
+    PLUS, // + 17
+    INCREMENT, // ++ 18
+    MINUS, // - 19
+    DECREMENT, // -- 20
+    SLASH, // / 21
+    ASTERISK, // * 22
+    EXPONENTIATION, // ** 23
+    PERCENT, // % 24
+    REMAINDER, // %% 25
+    EQUALS_EQUALS, // == 26
+    NOT_EQUALS, // != 27
+    GREATER_THAN, // > 28
+    LESS_THAN, // < 29
+    GREATER_THAN_OR_EQUALS, // >= 30
+    LESS_THAN_OR_EQUALS, // <= 31
+    AND, // && 32
+    OR, // || 33
+    PIPE, // | // new x: <T> | <T> = <EXPR> 34
+    COMMA, // , 35
+    COLON, // : 36
+    SEMICOLON, // ; 37
+    DOT, // . 38
+    LPAREN, // ( 39
+    RPAREN, // ) 40
+    LBRACE, // { 41
+    RBRACE, // } 42
 
-    EOF, // EndOfFile
+    EOF, // EndOfFile 43
 }
 
 export type NativeValue = string | boolean | number | null;
