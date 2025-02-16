@@ -1,0 +1,5 @@
+new lambda: int = fn (x: int): int {
+    return PI * x
+}
+
+lambda(100)

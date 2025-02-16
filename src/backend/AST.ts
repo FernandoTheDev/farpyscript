@@ -1,8 +1,15 @@
-import { Loc } from "../frontend/Token.ts";
+import { Loc, Token } from "../frontend/Token.ts";
 import { TypesNative } from "../runtime/Values.ts";
 
 export type NodeType =
     | "Program"
+    | "CallExpr"
+    | "FunctionDeclaration"
+    | "LambdaExpr"
+    | "ReturnStatement"
+    | "IfStatement"
+    | "BlockStmt"
+    | "ReturnStatement"
     | "VarDeclaration"
     | "AssignmentDeclaration"
     | "Identifier"
@@ -11,6 +18,8 @@ export type NodeType =
     | "BinaryLiteral"
     | "StringLiteral"
     | "NullLiteral"
+    | "IncrementExpr"
+    | "DecrementExpr"
     | "BinaryExpr";
 
 export interface Stmt {
@@ -34,6 +43,16 @@ export interface BinaryExpr extends Expr {
     left: Expr;
     right: Expr;
     operator: string;
+}
+
+export interface IncrementExpr extends Expr {
+    kind: "IncrementExpr";
+    value: Expr;
+}
+
+export interface DecrementExpr extends Expr {
+    kind: "DecrementExpr";
+    value: Expr;
 }
 
 export interface Identifier extends Expr {
@@ -137,6 +156,62 @@ export interface AssignmentDeclaration extends Stmt {
     type: TypesNative; // Type of variable
     id: Identifier;
     value: Stmt;
+}
+
+// <ARGS> = <ID> : <TYPES> , ....
+// fn <ID> (<ARGS>): <R_TYPE> <BLOCK>
+// fn main(x: int, y: binary:float): int|float { return x * y }
+export interface FunctionDeclaration extends Stmt {
+    kind: "FunctionDeclaration";
+    type: TypesNative | TypesNative[]; // Type of return
+    args: { id: Identifier; type: TypesNative | TypesNative[] }; // Args
+    id: Identifier; // name of function
+    block: Stmt[];
+}
+
+// }}
+
+// Expressions {{
+
+// print(n, z, x, y, ...)
+export interface CallExpr extends Expr {
+    kind: "CallExpr";
+    type: TypesNative; // Type of return
+    id: Identifier;
+    args: Expr[];
+}
+
+export interface LambdaExpr extends Expr {
+    kind: "LambdaExpr";
+    externalVars: Identifier[]; // Variables captured from the outer scope
+    args: { id: Identifier; type: TypesNative | TypesNative[] }[];
+    type: TypesNative | TypesNative[];
+    body: Stmt[];
+}
+
+// }}
+
+// Statements {{
+
+export interface ReturnStatement extends Stmt {
+    kind: "ReturnStatement";
+    type: TypesNative | TypesNative[]; // Type of return
+    value: Expr;
+}
+
+export interface IfStatement extends Stmt {
+    kind: "IfStatement";
+    type: TypesNative | TypesNative[]; // Type of return if exists
+    value: Expr | Expr[] | Stmt; // Value of return if exists
+    condition: Expr | Expr[];
+    primary: Stmt[]; // if () {}
+    secondary: Stmt[]; // else {} | else if {}
+}
+
+export interface BlockStmt extends Stmt {
+    kind: "BlockStmt";
+    body: Stmt[]; // Lista de declarações dentro do bloco
+    endToken: Token; // Token de fechamento, útil para informações de localização
 }
 
 // }}

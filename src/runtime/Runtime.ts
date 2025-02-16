@@ -2,7 +2,12 @@ import {
     AssignmentDeclaration,
     BinaryExpr,
     BinaryLiteral,
+    CallExpr,
+    DecrementExpr,
+    FunctionDeclaration,
     Identifier,
+    IfStatement,
+    IncrementExpr,
     Program,
     Stmt,
     VarDeclaration,
@@ -14,6 +19,7 @@ import {
     IntValue,
     NullValue,
     RuntimeValue,
+    VALUE_BOOL,
     VALUE_FLOAT,
     VALUE_INT,
     VALUE_NULL,
@@ -21,9 +27,14 @@ import {
 } from "./Values.ts";
 import VarDeclarationRuntime from "./declarations/VarDeclarationRuntime.ts";
 import Context from "./context/Context.ts";
-import IdentifierExpressionRuntime from "./expressions/IdentifierExpression.ts";
+import { IdentifierExpressionRuntime } from "./expressions/IdentifierExpression.ts";
 import AssignmentDeclarationRuntime from "./declarations/AssignmentDeclarationRuntime.ts";
 import { TypesNative } from "./Values.ts";
+import CallExpressionRuntime from "./expressions/CallExpressionRuntime.ts";
+import { DecrementExpressionRuntime } from "./expressions/DecrementExpressionRuntime.ts";
+import { IncrementExpressionRuntime } from "./expressions/IncrementExprssionRuntime.ts";
+import FunctionDeclarationRuntime from "./declarations/FunctionDeclarationRuntime.ts";
+import { IfStatementRuntime } from "./statements/IfStatementRuntime.ts";
 export default class Runtime {
     private context: Context;
 
@@ -32,6 +43,7 @@ export default class Runtime {
     }
 
     public evaluate(stmt: Stmt): RuntimeValue {
+        // console.log(stmt);
         switch (stmt.kind) {
             case "Program":
                 return this.evaluate_program(stmt as Program);
@@ -47,9 +59,23 @@ export default class Runtime {
                 return VALUE_STRING(stmt.value, stmt.loc);
             case "BinaryExpr":
                 return this.evaluate_binary_expr(stmt as BinaryExpr);
+            case "ReturnStatement":
+                return this.evaluate(stmt.value);
             case "VarDeclaration":
                 return VarDeclarationRuntime.evaluate(
                     stmt as VarDeclaration,
+                    this.context,
+                    this,
+                );
+            case "FunctionDeclaration":
+                return FunctionDeclarationRuntime.evaluate(
+                    stmt as FunctionDeclaration,
+                    this.context,
+                    this,
+                );
+            case "CallExpr":
+                return CallExpressionRuntime.evaluate(
+                    stmt as CallExpr,
                     this.context,
                     this,
                 );
@@ -65,9 +91,27 @@ export default class Runtime {
                     this.context,
                     this,
                 );
+            case "DecrementExpr":
+                return DecrementExpressionRuntime.evaluate(
+                    stmt as DecrementExpr,
+                    this.context,
+                    this,
+                );
+            case "IncrementExpr":
+                return IncrementExpressionRuntime.evaluate(
+                    stmt as IncrementExpr,
+                    this.context,
+                    this,
+                );
+            case "IfStatement":
+                return IfStatementRuntime.evaluate(
+                    stmt as IfStatement,
+                    this.context,
+                    this,
+                );
             default:
                 ErrorReporter.showError(
-                    `Node undefined ${stmt.type}`,
+                    `Node undefined ${stmt.kind}`,
                     stmt.loc,
                 );
                 Deno.exit();
@@ -86,6 +130,7 @@ export default class Runtime {
 
         for (const statement of program.body) {
             lastEval = this.evaluate(statement);
+            // console.log(lastEval);
         }
 
         return lastEval as RuntimeValue;
@@ -101,10 +146,6 @@ export default class Runtime {
     private evaluate_binary_expr(binary: BinaryExpr): RuntimeValue {
         const lhs: RuntimeValue = this.evaluate(binary.left);
         const rhs: RuntimeValue = this.evaluate(binary.right);
-
-        if (lhs.type === "null" || rhs.type === "null") {
-            return VALUE_NULL(null, binary.loc);
-        }
 
         if (lhs.type === "string" || rhs.type === "string") {
             if (binary.operator != "+") {
@@ -124,6 +165,28 @@ export default class Runtime {
         const right = rhs as IntValue | FloatValue | BooleanValue;
 
         switch (binary.operator) {
+            case "&&": {
+                if (left.type != "bool" && right.type != "bool") {
+                    return VALUE_BOOL(false, binary.loc);
+                }
+
+                return VALUE_BOOL(
+                    left.value == true && right.value == true,
+                    binary.loc,
+                );
+            }
+            case "||": {
+                if (left.type != "bool" && right.type != "bool") {
+                    return VALUE_BOOL(false, binary.loc);
+                }
+
+                return {
+                    type: "bool",
+                    value:
+                        (left.value == true || right.value == true) as boolean,
+                    loc: binary.loc,
+                } as BooleanValue;
+            }
             case "+":
                 return {
                     type: left.type === "float" || right.type === "float"
@@ -190,6 +253,11 @@ export default class Runtime {
                     type: "bool",
                     value: Number(left.value) >= Number(right.value),
                 } as BooleanValue;
+            case "<=":
+                return {
+                    type: "bool",
+                    value: Number(left.value) <= Number(right.value),
+                } as BooleanValue;
             default:
                 ErrorReporter.showError(
                     `Unknown operator ${binary.operator}`,
@@ -199,8 +267,11 @@ export default class Runtime {
         }
     }
 
-    public validateType(value: Stmt, type: TypesNative[]): boolean {
-        if (!type.includes(value.type as TypesNative)) {
+    public validateType(
+        value: Stmt | RuntimeValue,
+        type: TypesNative[],
+    ): boolean {
+        if (!type.includes(value.type as TypesNative) && value.type !== "id") {
             ErrorReporter.showError(
                 `The expected type does not match the type of the value. Expected one of ${
                     type.join(", ")

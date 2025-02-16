@@ -63,6 +63,11 @@ export class Lexer {
                 continue;
             }
 
+            if (char === "/") {
+                this.lexing_comment();
+                continue;
+            }
+
             const muti = char.concat(this.source[this.offset + 1]);
             const multiTokenType = Lexer
                 .MULTI_CHAR_TOKENS[
@@ -79,11 +84,6 @@ export class Lexer {
 
             if (singleTokenType) {
                 this.createToken(singleTokenType, char);
-                continue;
-            }
-
-            if (char === "/") {
-                this.lexing_comment();
                 continue;
             }
 

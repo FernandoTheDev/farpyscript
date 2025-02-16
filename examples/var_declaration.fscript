@@ -1,5 +1,3 @@
-new mut x: int = 10
-
-x = x + 1
-
-// deno run -A main.ts examples/var_declaration.fscript
+new mut x: int = 9
+x++**2 // x = 100
+x--

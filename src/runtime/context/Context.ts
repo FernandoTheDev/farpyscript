@@ -1,13 +1,25 @@
 import { Identifier } from "../../backend/AST.ts";
-import { VarDeclarationValue } from "../Values.ts";
+import {
+    FunctionNativeDeclarationValue,
+    FunctionValue,
+    NativeFnValue,
+    RuntimeValue,
+    VALUE_NULL,
+    VarDeclarationValue,
+} from "../Values.ts";
 import { ErrorReporter } from "../../error/ErrorReporter.ts";
+import { Loc } from "../../frontend/Token.ts";
 
 export default class Context {
     private parent?: Context;
     private variables: Map<string, VarDeclarationValue> = new Map();
+    private functions: Map<
+        string,
+        FunctionValue | FunctionNativeDeclarationValue
+    > = new Map();
     private constants: Map<string, VarDeclarationValue> = new Map();
 
-    public constructor(parent?: Context) {
+    public constructor(parent?: Context, private is_function: boolean = false) {
         this.parent = parent;
     }
 
@@ -42,6 +54,38 @@ export default class Context {
         return value;
     }
 
+    public new_function(
+        name: Identifier,
+        value: FunctionValue | FunctionNativeDeclarationValue,
+    ): FunctionValue | FunctionNativeDeclarationValue {
+        if (this.functions.has(name.value)) {
+            ErrorReporter.showError(
+                `Undue function redeclaration '${name.value}'.`,
+                name.loc,
+            );
+            Deno.exit();
+        }
+
+        this.functions.set(name.value, value);
+        return value;
+    }
+
+    public update_function(
+        name: Identifier,
+        value: FunctionValue | FunctionNativeDeclarationValue,
+    ): FunctionValue | FunctionNativeDeclarationValue {
+        if (!this.functions.has(name.value)) {
+            ErrorReporter.showError(
+                `Function does not exist '${name.value}'.`,
+                name.loc,
+            );
+            Deno.exit();
+        }
+
+        this.functions.set(name.value, value);
+        return value;
+    }
+
     // Assign value to existing variable
     public assign_var(
         var_name: Identifier,
@@ -71,5 +115,13 @@ export default class Context {
     public look_up_const(var_name: string): VarDeclarationValue | undefined {
         return this.constants.get(var_name) ||
             this.parent?.look_up_const(var_name) || undefined;
+    }
+
+    public look_up_function(
+        name: string,
+    ): FunctionValue | FunctionNativeDeclarationValue | undefined {
+        return this.functions.get(name) ||
+            this.parent?.look_up_function(name) ||
+            undefined;
     }
 }
