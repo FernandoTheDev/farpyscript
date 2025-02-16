@@ -1,10 +1,10 @@
-fn ateMaiorQue100(n: int): int
+fn recursive(n: int): int
 {
-    if (n > 32) {
+    if (n >= 32) {
         return n
     }
 
-    return ateMaiorQue100(n + 1)
+    return recursive(n * 2)
 }
 
-print(ateMaiorQue100(2))
+print(recursive(2))

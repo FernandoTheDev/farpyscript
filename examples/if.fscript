@@ -1,6 +1,9 @@
-new mut x: int = sum(1, 1)
+new x: int = fib(10)
 
-if x == 2 {
-    x = 2 ** 2
-    print(x)
+if x > 60 || x == 100 {
+    print("fib(10) > 60 || fib(10) == 100")
+} elif x > 55 {
+    print("fib(10) > 55") 
+} else {
+    print("fib(10) = " + x)
 }

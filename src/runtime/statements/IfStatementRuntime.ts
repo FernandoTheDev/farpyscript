@@ -1,38 +1,39 @@
-import { IfStatement, Stmt } from "../../backend/AST.ts";
+import { ElifStatement, IfStatement, Stmt } from "../../backend/AST.ts";
 import { ErrorReporter as _ErrorReporter } from "../../error/ErrorReporter.ts";
+import { Loc } from "../../frontend/Token.ts";
 import Context from "../context/Context.ts";
 import Runtime from "../Runtime.ts";
-import { RuntimeValue } from "../Values.ts";
+import { RuntimeValue, VALUE_VOID } from "../Values.ts";
 
 export class IfStatementRuntime {
     public static evaluate(
-        stmt: IfStatement,
+        stmt: IfStatement | ElifStatement,
         _context: Context,
         _self: Runtime,
     ): RuntimeValue {
-        // console.log(_self.evaluate(stmt.condition as Stmt));
         // console.log(stmt);
 
-        // Deno.exit();
-
-        // console.log(_self.evaluate(stmt.condition as Stmt).value == true);
-        let value: RuntimeValue = _self.evaluate(stmt.value as Stmt);
-
         if (_self.evaluate(stmt.condition as Stmt).value == true) {
-            for (let i = 0; i < stmt.primary.length; i++) {
-                const stmt_ = stmt.primary[i];
-                const evaluated = _self.evaluate(stmt_ as Stmt);
-
-                if (stmt_.kind == "ReturnStatement") {
-                    evaluated.ret = true;
-                    value = evaluated;
-                    return evaluated;
-                }
-            }
-        } else {
-            // console.log("Else");
+            return this.execute(stmt.primary, _self);
+        } else if (stmt.secondary.length > 0) {
+            return this.execute(stmt.secondary, _self);
         }
 
-        return value;
+        return VALUE_VOID({} as Loc);
+    }
+
+    private static execute(
+        primaryOrSecondary: Stmt[],
+        _self: Runtime,
+    ): RuntimeValue {
+        for (let i = 0; i < primaryOrSecondary.length; i++) {
+            const stmt_ = primaryOrSecondary[i];
+            const evaluated = _self.evaluate(stmt_ as Stmt);
+
+            if (evaluated.ret || stmt_.kind == "ReturnStatement") {
+                return evaluated;
+            }
+        }
+        return VALUE_VOID({} as Loc);
     }
 }

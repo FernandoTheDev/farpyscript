@@ -4,6 +4,8 @@ import {
     BinaryLiteral,
     CallExpr,
     DecrementExpr,
+    ElifStatement,
+    ElseStatement,
     FunctionDeclaration,
     Identifier,
     IfStatement,
@@ -32,9 +34,10 @@ import AssignmentDeclarationRuntime from "./declarations/AssignmentDeclarationRu
 import { TypesNative } from "./Values.ts";
 import CallExpressionRuntime from "./expressions/CallExpressionRuntime.ts";
 import { DecrementExpressionRuntime } from "./expressions/DecrementExpressionRuntime.ts";
-import { IncrementExpressionRuntime } from "./expressions/IncrementExprssionRuntime.ts";
+import { IncrementExpressionRuntime } from "./expressions/IncrementExpressionRuntime.ts";
 import FunctionDeclarationRuntime from "./declarations/FunctionDeclarationRuntime.ts";
 import { IfStatementRuntime } from "./statements/IfStatementRuntime.ts";
+import { ElseStatementRuntime } from "./statements/ElseStatementRuntime.ts";
 export default class Runtime {
     private context: Context;
 
@@ -59,8 +62,11 @@ export default class Runtime {
                 return VALUE_STRING(stmt.value, stmt.loc);
             case "BinaryExpr":
                 return this.evaluate_binary_expr(stmt as BinaryExpr);
-            case "ReturnStatement":
-                return this.evaluate(stmt.value);
+            case "ReturnStatement": {
+                const result = this.evaluate(stmt.value);
+                result.ret = true;
+                return result;
+            }
             case "VarDeclaration":
                 return VarDeclarationRuntime.evaluate(
                     stmt as VarDeclaration,
@@ -109,6 +115,18 @@ export default class Runtime {
                     this.context,
                     this,
                 );
+            case "ElseStatement":
+                return ElseStatementRuntime.evaluate(
+                    stmt as ElseStatement,
+                    this.context,
+                    this,
+                );
+            case "ElifStatement":
+                return IfStatementRuntime.evaluate(
+                    stmt as ElifStatement,
+                    this.context,
+                    this,
+                );
             default:
                 ErrorReporter.showError(
                     `Node undefined ${stmt.kind}`,
@@ -146,6 +164,9 @@ export default class Runtime {
     private evaluate_binary_expr(binary: BinaryExpr): RuntimeValue {
         const lhs: RuntimeValue = this.evaluate(binary.left);
         const rhs: RuntimeValue = this.evaluate(binary.right);
+
+        // console.log("Left", lhs.value);
+        // console.log("Right", rhs.value);
 
         if (lhs.type === "string" || rhs.type === "string") {
             if (binary.operator != "+") {
@@ -193,6 +214,8 @@ export default class Runtime {
                         ? "float"
                         : "int",
                     value: Number(left.value) + Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
                 } as IntValue | FloatValue;
             case "-":
                 return {
@@ -200,6 +223,8 @@ export default class Runtime {
                         ? "float"
                         : "int",
                     value: Number(left.value) - Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
                 } as IntValue | FloatValue;
             case "*":
                 return {
@@ -207,6 +232,8 @@ export default class Runtime {
                         ? "float"
                         : "int",
                     value: Number(left.value) * Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
                 } as IntValue | FloatValue;
             case "**":
                 return {
@@ -214,6 +241,8 @@ export default class Runtime {
                         ? "float"
                         : "int",
                     value: Number(left.value) ** Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
                 } as IntValue | FloatValue;
             case "/":
                 if (Number(right.value) === 0) {
@@ -222,41 +251,57 @@ export default class Runtime {
                 return {
                     type: "float",
                     value: Number(left.value) / Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
                 } as FloatValue;
             case "%":
                 return {
                     type: "int",
                     value: Number(left.value) % Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
                 } as IntValue;
             case "==":
                 return {
                     type: "bool",
                     value: left.value === right.value,
+                    loc: binary.loc,
+                    ret: true,
                 } as BooleanValue;
             case "!=":
                 return {
                     type: "bool",
                     value: left.value !== right.value,
+                    loc: binary.loc,
+                    ret: true,
                 } as BooleanValue;
             case ">":
                 return {
                     type: "bool",
                     value: Number(left.value) > Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
                 } as BooleanValue;
             case "<":
                 return {
                     type: "bool",
                     value: Number(left.value) < Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
                 } as BooleanValue;
             case ">=":
                 return {
                     type: "bool",
                     value: Number(left.value) >= Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
                 } as BooleanValue;
             case "<=":
                 return {
                     type: "bool",
                     value: Number(left.value) <= Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
                 } as BooleanValue;
             default:
                 ErrorReporter.showError(

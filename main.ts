@@ -91,6 +91,30 @@ context.new_function(
     } as FunctionNativeDeclarationValue,
 );
 
+// fib(x)
+context.new_function(
+    AST_IDENTIFIER("fib", loc),
+    {
+        kind: "native-fn",
+        infinity: false,
+        args: [
+            { type: ["int"] },
+        ] as ArgsValue[],
+        type: ["int"] as TypesNative[],
+        context: new Context(context, true),
+        fn: NATIVE_FN((args, _scope) => {
+            const fib = (n: number): number => {
+                if (n <= 1) {
+                    return n;
+                }
+                return fib(n - 1) + fib(n - 2);
+            };
+            const n = Number(args[0]?.value);
+            return VALUE_INT(fib(n), loc);
+        }),
+    } as FunctionNativeDeclarationValue,
+);
+
 if (args.length < 1) {
     console.log("FarpyScript - Repl v0.0.1");
 

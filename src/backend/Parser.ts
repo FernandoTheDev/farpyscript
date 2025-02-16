@@ -12,6 +12,8 @@ import {
     BinaryLiteral,
     BlockStmt,
     CallExpr,
+    ElifStatement,
+    ElseStatement,
     Expr,
     FloatLiteral,
     FunctionDeclaration,
@@ -280,31 +282,118 @@ export default class Parser {
         }
     }
 
-    private parse_if_statement(): IfStatement {
-        const startToken: Token = this.eat(); // if
+    private parse_elif_statement(): ElifStatement {
+        const startToken: Token = this.eat(); // elif
         const expr = this.parse_expr();
         this.consume(TokenType.LBRACE, "Era esperado um '{' após a expressão."); // {
         let value: NullLiteral | Expr | Stmt = AST_NULL({} as Loc);
         const block: Stmt[] = [];
+        const secondBlock: Stmt[] = [];
 
         while (
             this.is_end() == false && this.peek().kind !== TokenType.RBRACE
         ) {
             const expr_ = this.parse_expr();
 
-            if (this.peek().kind == TokenType.RETURN) {
+            if (expr_.kind == "ReturnStatement") {
                 value = expr_;
             }
 
             block.push(expr_);
         }
 
-        let endToken: Token = this.consume(
+        const endToken: Token = this.consume(
             TokenType.RBRACE,
             "Era esperado um '}' após o bloco de código.",
         ); // }
 
-        // if (this.peek().kind == "")
+        if (this.peek().kind == TokenType.ELSE) {
+            secondBlock.push(this.parse_else_statement());
+        }
+
+        if (this.peek().kind === TokenType.ELIF) {
+            secondBlock.push(this.parse_elif_statement());
+        }
+
+        return {
+            kind: "ElifStatement",
+            type: value.type,
+            value: value,
+            condition: expr,
+            primary: block,
+            secondary: secondBlock,
+            loc: this.getLocationFromTokens(startToken.loc, endToken.loc),
+        } as ElifStatement;
+    }
+
+    private parse_else_statement(): ElseStatement {
+        const startToken: Token = this.eat(); // Consume 'else'
+        let value: NullLiteral | Expr | Stmt = AST_NULL({} as Loc);
+        const block: Stmt[] = [];
+
+        this.consume(
+            TokenType.LBRACE,
+            "Era esperado um '{' após a expressão.",
+        ); // {
+
+        while (
+            this.is_end() == false && this.peek().kind !== TokenType.RBRACE
+        ) {
+            const expr_ = this.parse_expr();
+
+            if (expr_.kind == "ReturnStatement") {
+                value = expr_;
+            }
+
+            block.push(expr_);
+        }
+
+        const endToken: Token = this.consume(
+            TokenType.RBRACE,
+            "Era esperado um '}' após o bloco de código.",
+        ); // {
+
+        return {
+            kind: "ElseStatement",
+            type: value.type,
+            value: value,
+            primary: block,
+            loc: this.getLocationFromTokens(startToken.loc, endToken.loc),
+        } as ElseStatement;
+    }
+
+    private parse_if_statement(): IfStatement {
+        const startToken: Token = this.eat(); // if
+        const expr = this.parse_expr();
+        this.consume(TokenType.LBRACE, "Era esperado um '{' após a expressão."); // {
+        let value: NullLiteral | Expr | Stmt = AST_NULL({} as Loc);
+        const block: Stmt[] = [];
+        const secondBlock: Stmt[] = [];
+
+        while (
+            this.is_end() == false && this.peek().kind !== TokenType.RBRACE
+        ) {
+            const expr_ = this.parse_expr();
+
+            if (expr_.kind == "ReturnStatement") {
+                value = expr_;
+            }
+
+            block.push(expr_);
+        }
+
+        const endToken: Token = this.consume(
+            TokenType.RBRACE,
+            "Era esperado um '}' após o bloco de código.",
+        ); // }
+
+        if (this.peek().kind == TokenType.ELSE) {
+            secondBlock.push(this.parse_else_statement());
+        }
+
+        if (this.peek().kind === TokenType.ELIF) {
+            secondBlock.push(this.parse_elif_statement());
+        }
 
         return {
             kind: "IfStatement",
@@ -312,7 +401,7 @@ export default class Parser {
             value: value,
             condition: expr,
             primary: block,
-            secondary: [] as Stmt[],
+            secondary: secondBlock,
             loc: this.getLocationFromTokens(startToken.loc, endToken.loc),
         } as IfStatement;
     }
@@ -326,6 +415,7 @@ export default class Parser {
 
         return {
             kind: "ReturnStatement",
+            type: value.type,
             value: value,
             loc: this.getLocationFromTokens(startToken.loc, value.loc),
         } as ReturnStatement;

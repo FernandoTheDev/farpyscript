@@ -37,16 +37,17 @@ export default class CallExpressionRuntime {
         }
 
         const declare: FunctionValue = (fn as unknown) as FunctionValue;
-        const runtime = new Runtime(declare.context);
+        const newContext = new Context(declare.context);
+        const runtime = new Runtime(newContext);
         const args = stmt.args.map((arg) => _self.evaluate(arg));
 
-        let value: RuntimeValue = VALUE_NULL(null, {} as Loc);
+        const value: RuntimeValue = VALUE_NULL(null, {} as Loc);
 
         if (fn.kind == "native-fn") {
             if (!fn.infinity) {
                 if (stmt.args.length != fn.args.length) {
                     ErrorReporter.showError(
-                        `A quantidade de argumentos passados não coincidem com a quantidade esperada na função.`,
+                        `The number of arguments passed does not match the expected number in the function.`,
                         stmt.loc,
                     );
                     Deno.exit();
@@ -89,41 +90,35 @@ export default class CallExpressionRuntime {
                 Deno.exit(1);
             }
 
-            if (declare.context.look_up_var(arg_func.id!.value)) {
-                declare.context.assign_var(arg_func.id!, {
+            if (newContext.look_up_var(arg_func.id!.value)) {
+                newContext.assign_var(arg_func.id!, {
                     types: arg_func.type as TypesNative[],
                     value: arg_call,
                 });
             } else {
-                declare.context.new_var(arg_func.id!, {
+                newContext.new_var(arg_func.id!, {
                     types: arg_func.type as TypesNative[],
                     value: arg_call,
                 });
             }
         }
 
-        // console.log(args);
-        // Deno.exit();
-
         for (let i = 0; i < fn.body.length; i++) {
             const _stmt = fn.body[i];
-
-            // console.log(_stmt);
-
             const evaluated = runtime.evaluate(_stmt);
 
+            if (evaluated.ret) {
+                return evaluated;
+            }
+
             if (_stmt.kind == "ReturnStatement") {
-                value = evaluated;
-                break;
+                return evaluated;
             }
 
             if (_stmt.kind == "IfStatement") {
-                console.log("RET", evaluated.ret);
                 if (evaluated.ret) {
-                    value = evaluated;
-                    break;
+                    return evaluated;
                 }
-                continue;
             }
         }
 

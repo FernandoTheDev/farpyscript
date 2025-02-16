@@ -8,6 +8,8 @@ export type NodeType =
     | "LambdaExpr"
     | "ReturnStatement"
     | "IfStatement"
+    | "ElseStatement"
+    | "ElifStatement"
     | "BlockStmt"
     | "ReturnStatement"
     | "VarDeclaration"
@@ -204,8 +206,24 @@ export interface IfStatement extends Stmt {
     type: TypesNative | TypesNative[]; // Type of return if exists
     value: Expr | Expr[] | Stmt; // Value of return if exists
     condition: Expr | Expr[];
-    primary: Stmt[]; // if () {}
-    secondary: Stmt[]; // else {} | else if {}
+    primary: Stmt[]; // if {}
+    secondary: Stmt[]; // else {} | elif {}
+}
+
+export interface ElseStatement extends Stmt {
+    kind: "ElseStatement";
+    type: TypesNative | TypesNative[]; // Type of return if exists
+    value: Expr | Expr[] | Stmt; // Value of return if exists
+    primary: Stmt[]; // else {}
+}
+
+export interface ElifStatement extends Stmt {
+    kind: "ElifStatement";
+    type: TypesNative | TypesNative[]; // Type of return if exists
+    value: Expr | Expr[] | Stmt; // Value of return if exists
+    condition: Expr | Expr[];
+    primary: Stmt[]; // elif {}
+    secondary: Stmt[]; // else {} | elif {}
 }
 
 export interface BlockStmt extends Stmt {
