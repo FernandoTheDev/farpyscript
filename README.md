@@ -4,7 +4,7 @@
  <img src="/images/logo.png" width="300" height="300">
 </div>
 
-[![Version](https://img.shields.io/badge/version-0.0.1--alpha-blue.svg)](https://github.com/your-username/farpyscript)
+[![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)](https://github.com/your-username/farpyscript)
 
 FarpyScript is an experimental interpreted programming language focused on security, developed as an open-source educational project.
 
@@ -12,7 +12,7 @@ FarpyScript is an experimental interpreted programming language focused on secur
 
 - **Version**: 0.0.1  
 - **Status**: Early development  
-- **Last update**: January 2025  
+- **Last update**: 16/02/2025 | 02/16/2025
 
 ## Overview
 
@@ -52,6 +52,10 @@ In the future, binary with path will come
   - Mutable and immutable variables  
   - Strong typing  
   - Variable redeclaration
+- Language Features  
+  - Function declaration and calls  
+  - Recursion  
+  - Control flow structures (if)  
 - Built-in constants  
 
 ### In Progress 🚧 
@@ -59,14 +63,11 @@ In the future, binary with path will come
 - Type System  
   - Complex types (objects, arrays, vectors)  
 - Language Features  
-  - Function declaration and calls  
-  - Recursion  
-  - Control flow structures (if, for, while, try/catch)  
+  - Control flow structures (for, while, try/catch)  
 - Native Libraries  
   - I/O  
   - Math  
   - HTTP  
-  - Built-in constants  
 
 ## Architecture
 
