@@ -1,10 +1,10 @@
-import Context from "../context/Context.ts";
-import { RuntimeValue, VALUE_NULL } from "../Values.ts";
 import { Identifier } from "../../backend/AST.ts";
-import Runtime from "../Runtime.ts";
 import { ErrorReporter } from "../../error/ErrorReporter.ts";
+import Context from "../context/Context.ts";
+import Runtime from "../Runtime.ts";
+import { RuntimeValue, VALUE_NULL } from "../Values.ts";
 
-export default class IdentifierExpressionRuntime {
+export class IdentifierExpressionRuntime {
     public static evaluate(
         stmt: Identifier,
         context: Context,

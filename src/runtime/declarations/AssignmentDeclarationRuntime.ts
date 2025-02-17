@@ -13,8 +13,8 @@ export default class AssignmentDeclarationRuntime {
         const var_ = context.look_up_var(stmt.id.value);
 
         if (var_) {
-            if (self.validateType(stmt, var_.types as TypesNative[])) {
-                const value: RuntimeValue = self.evaluate(stmt.value);
+            const value: RuntimeValue = self.evaluate(stmt.value);
+            if (self.validateType(value, var_.types as TypesNative[])) {
                 context.assign_var(
                     stmt.id,
                     { types: var_.types, value: value },

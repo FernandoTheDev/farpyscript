@@ -1,0 +1,7 @@
+new x: int = 1
+
+new lambda: int = fn |x|(y: int): int {
+    return PI * (x + y)
+}
+
+print(lambda(100))

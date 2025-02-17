@@ -1,6 +1,5 @@
-new x: int = 10
-new x: float = 10.1
-new x: binary = 0b10
-new x: string = "10"
-new x: null = null
-
+new mut x: int|float|string|binary|bool|null = 10
+x = 0b10
+x = 10.1
+x = "100"
+x = null

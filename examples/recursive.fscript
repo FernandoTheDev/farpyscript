@@ -1,0 +1,10 @@
+fn recursive(n: int): int
+{
+    if (n >= 32) {
+        return n
+    }
+
+    return recursive(n * 2)
+}
+
+print(recursive(2))

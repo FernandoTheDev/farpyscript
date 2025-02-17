@@ -5,8 +5,14 @@ import { AST_IDENTIFIER, Program } from "./src/backend/AST.ts";
 import Runtime from "./src/runtime/Runtime.ts";
 import Context from "./src/runtime/context/Context.ts";
 import {
+    ArgsValue,
+    FunctionNativeDeclarationValue,
+    NATIVE_FN,
+    TypesNative,
     VALUE_BOOL,
     VALUE_FLOAT,
+    VALUE_INT,
+    VALUE_NULL,
     VarDeclarationValue,
 } from "./src/runtime/Values.ts";
 
@@ -30,6 +36,13 @@ context.new_var(
     true,
 );
 
+// null
+context.new_var(
+    AST_IDENTIFIER("null", loc),
+    { types: ["null"], value: VALUE_NULL(null, loc) } as VarDeclarationValue,
+    true,
+);
+
 // PI
 context.new_var(
     AST_IDENTIFIER("PI", loc),
@@ -40,7 +53,67 @@ context.new_var(
     true,
 );
 
-// }}
+// print(x, y, ...)
+context.new_function(
+    AST_IDENTIFIER("print", loc),
+    {
+        kind: "native-fn",
+        infinity: true,
+        args: [] as ArgsValue[],
+        type: ["null"] as TypesNative[],
+        context: new Context(context, true),
+        fn: NATIVE_FN((args, _scope) => {
+            for (const arg of args) {
+                console.log(arg.value);
+            }
+
+            return VALUE_NULL(null, loc);
+        }),
+    } as FunctionNativeDeclarationValue,
+);
+
+// sum(x, y)
+context.new_function(
+    AST_IDENTIFIER("sum", loc),
+    {
+        kind: "native-fn",
+        infinity: false,
+        args: [
+            { type: ["int", "float"] },
+            { type: ["int", "float"] },
+        ] as ArgsValue[],
+        type: ["int", "float"] as TypesNative[],
+        context: new Context(context, true),
+        fn: NATIVE_FN((args, _scope) => {
+            const r = Number(args[0]?.value) + Number(args[1]?.value);
+            return VALUE_INT(r, loc);
+        }),
+    } as FunctionNativeDeclarationValue,
+);
+
+// fib(x)
+context.new_function(
+    AST_IDENTIFIER("fib", loc),
+    {
+        kind: "native-fn",
+        infinity: false,
+        args: [
+            { type: ["int"] },
+        ] as ArgsValue[],
+        type: ["int"] as TypesNative[],
+        context: new Context(context, true),
+        fn: NATIVE_FN((args, _scope) => {
+            const fib = (n: number): number => {
+                if (n <= 1) {
+                    return n;
+                }
+                return fib(n - 1) + fib(n - 2);
+            };
+            const n = Number(args[0]?.value);
+            return VALUE_INT(fib(n), loc);
+        }),
+    } as FunctionNativeDeclarationValue,
+);
 
 if (args.length < 1) {
     console.log("FarpyScript - Repl v0.0.1");
@@ -66,7 +139,8 @@ if (args.length < 1) {
         // console.log(program);
 
         const runtime: Runtime = new Runtime(context);
-        console.log(runtime.evaluate(program).value);
+        runtime.evaluate(program);
+        // console.log(runtime.evaluate(program).value);
     }
     Deno.exit();
 }
@@ -88,4 +162,5 @@ const program: Program = parser.parse();
 // console.log(program);
 
 const runtime: Runtime = new Runtime(context);
-console.log(runtime.evaluate(program));
+runtime.evaluate(program);
+// console.log(runtime.evaluate(program));

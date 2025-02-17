@@ -1,0 +1,6 @@
+fn main(x: int): int
+{
+    return sum(x, PI ** 2)
+}
+
+print(main(10))

@@ -4,7 +4,7 @@
  <img src="/images/logo.png" width="300" height="300">
 </div>
 
-[![Version](https://img.shields.io/badge/version-0.0.1--alpha-blue.svg)](https://github.com/your-username/farpyscript)
+[![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)](https://github.com/your-username/farpyscript)
 
 FarpyScript is an experimental interpreted programming language focused on security, developed as an open-source educational project.
 
@@ -12,7 +12,7 @@ FarpyScript is an experimental interpreted programming language focused on secur
 
 - **Version**: 0.0.1  
 - **Status**: Early development  
-- **Last update**: January 2025  
+- **Last update**: 16/02/2025 | 02/16/2025
 
 ## Overview
 
@@ -28,11 +28,13 @@ cd farpyscript
 ```
 
 Repl:
+
 ```bash
 deno run -A main.ts
 ```
 
 File:
+
 ```bash
 deno run -A main.ts <FILE>.fscript
 ```
@@ -45,31 +47,32 @@ In the future, binary with path will come
 
 - Lexer (Lexical Analyzer)  
 - Verbose error handling system  
-- Parser (Syntax Analyzer) 
+- Parser (Syntax Analyzer)
 - Type System  
   - Mutable and immutable variables  
   - Strong typing  
-  - Variable redeclaration  
- - Built-in constants  
-
-### In Progress 🚧
-
- 
-- Type System  
-  - Complex types (objects, arrays, vectors)  
+  - Variable redeclaration
 - Language Features  
   - Function declaration and calls  
   - Recursion  
-  - Control flow structures (if, for, while, try/catch)  
+  - Control flow structures (if)  
+- Built-in constants  
+
+### In Progress 🚧 
+  
+- Type System  
+  - Complex types (objects, arrays, vectors)  
+- Language Features  
+  - Control flow structures (for, while, try/catch)  
 - Native Libraries  
   - I/O  
   - Math  
   - HTTP  
-  - Built-in constants  
 
 ## Architecture
 
 The interpreter follows a recursive descent parser architecture, chosen for its:  
+
 - Simplicity of implementation  
 - Ease of understanding  
 - Suitability for educational purposes  
@@ -88,9 +91,9 @@ All PRs will be reviewed by the main maintainer (fernandothedev).
 
 ## License
 
-MIT License  
+MIT License
 
-```
+``` 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights

@@ -3,6 +3,7 @@ export enum TokenType {
     NEW, // new x = EXPR 0
     MUT, // new mut x = EXPR 1
     IF, // if 2
+    ELIF, // } elif () { 44
     ELSE, // else 3
     FOR, // for 4
     WHILE, // while 5
@@ -54,7 +55,13 @@ export enum TokenType {
     EOF, // EndOfFile 43
 }
 
-export type NativeValue = string | boolean | number | null;
+export type NativeValue =
+    | string
+    | boolean
+    | number
+    | null
+    | void
+    | CallableFunction;
 
 export interface Loc {
     file: string;
@@ -75,11 +82,11 @@ export const Keywords: Record<string, TokenType> = {
     "mut": TokenType.MUT,
     "if": TokenType.IF,
     "else": TokenType.ELSE,
+    "elif": TokenType.ELIF,
     "fn": TokenType.FN,
     "return": TokenType.RETURN,
     "for": TokenType.FOR,
     "while": TokenType.WHILE,
     "import": TokenType.IMPORT,
     "as": TokenType.AS,
-    "null": TokenType.NULL,
 };
