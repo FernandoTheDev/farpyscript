@@ -4,15 +4,15 @@
  <img src="/images/logo.png" width="300" height="300">
 </div>
 
-[![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)](https://github.com/your-username/farpyscript)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/fernandothedev/farpyscript)
 
 FarpyScript is an experimental interpreted programming language focused on security, developed as an open-source educational project.
 
 ## Current Version
 
-- **Version**: 0.0.1  
+- **Version**: 0.1.0  
 - **Status**: Early development  
-- **Last update**: 16/02/2025 | 02/16/2025
+- **Last update**: 17/02/2025 | 02/17/2025
 
 ## Overview
 
@@ -27,19 +27,39 @@ git clone https://github.com/FernandoTheDev/farpyscript
 cd farpyscript
 ```
 
-Repl:
+### Build
 
-```bash
-deno run -A main.ts
+To compile and get everything ready, run
+
+```
+make
 ```
 
-File:
+Now let's see some modes of our **farpy** binary
+
+#### Repl
 
 ```bash
-deno run -A main.ts <FILE>.fscript
+farpy -r
 ```
 
-In the future, binary with path will come
+#### File
+
+```bash
+farpy <FILE>.farpy
+```
+
+#### Options
+
+```bash
+farpy -h
+```
+
+#### Version
+
+```bash
+farpy -v
+```
 
 ## Development Status
 
