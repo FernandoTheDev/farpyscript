@@ -55,7 +55,13 @@ export enum TokenType {
     EOF, // EndOfFile 43
 }
 
-export type NativeValue = string | boolean | number | null | void;
+export type NativeValue =
+    | string
+    | boolean
+    | number
+    | null
+    | void
+    | CallableFunction;
 
 export interface Loc {
     file: string;

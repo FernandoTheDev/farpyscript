@@ -13,6 +13,7 @@ export type TypesNative =
     | "function"
     | "binary"
     | "void"
+    | "lambda"
     | FunctionType;
 
 export const TypesNativeArray: string[] = [
@@ -26,6 +27,7 @@ export const TypesNativeArray: string[] = [
     "function",
     "binary",
     "void",
+    "lambda",
     "FunctionType",
 ];
 
@@ -135,4 +137,13 @@ export interface FunctionValue extends RuntimeValue {
     context: Context;
     args: ArgsValue[];
     body: Stmt[];
+}
+
+export interface LambdaValue extends RuntimeValue {
+    kind: "lambda";
+    type: TypesNative[];
+    context: Context;
+    args: ArgsValue[];
+    body: Stmt[];
+    externalVars: Identifier[];
 }

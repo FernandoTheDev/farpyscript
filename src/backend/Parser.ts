@@ -629,7 +629,7 @@ export default class Parser {
         }
 
         // Parse return type(s) – expect a colon
-        console.log(this.peek());
+        // console.log(this.peek());
         this.consume(
             TokenType.COLON,
             "Expected ':' after lambda arguments for return type.",

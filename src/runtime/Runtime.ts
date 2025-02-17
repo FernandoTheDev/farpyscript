@@ -10,6 +10,7 @@ import {
     Identifier,
     IfStatement,
     IncrementExpr,
+    LambdaExpr,
     Program,
     Stmt,
     VarDeclaration,
@@ -29,7 +30,7 @@ import {
 } from "./Values.ts";
 import VarDeclarationRuntime from "./declarations/VarDeclarationRuntime.ts";
 import Context from "./context/Context.ts";
-import { IdentifierExpressionRuntime } from "./expressions/IdentifierExpression.ts";
+import { IdentifierExpressionRuntime } from "./expressions/IdentifierExpressionRuntime.ts";
 import AssignmentDeclarationRuntime from "./declarations/AssignmentDeclarationRuntime.ts";
 import { TypesNative } from "./Values.ts";
 import CallExpressionRuntime from "./expressions/CallExpressionRuntime.ts";
@@ -38,6 +39,7 @@ import { IncrementExpressionRuntime } from "./expressions/IncrementExpressionRun
 import FunctionDeclarationRuntime from "./declarations/FunctionDeclarationRuntime.ts";
 import { IfStatementRuntime } from "./statements/IfStatementRuntime.ts";
 import { ElseStatementRuntime } from "./statements/ElseStatementRuntime.ts";
+import { LambdaExpressionRuntime } from "./expressions/LambdaExpressionRuntime.ts";
 export default class Runtime {
     private context: Context;
 
@@ -124,6 +126,12 @@ export default class Runtime {
             case "ElifStatement":
                 return IfStatementRuntime.evaluate(
                     stmt as ElifStatement,
+                    this.context,
+                    this,
+                );
+            case "LambdaExpr":
+                return LambdaExpressionRuntime.evaluate(
+                    stmt as LambdaExpr,
                     this.context,
                     this,
                 );

@@ -1,5 +1,5 @@
 import { Loc, Token } from "../frontend/Token.ts";
-import { TypesNative } from "../runtime/Values.ts";
+import { ArgsValue, TypesNative } from "../runtime/Values.ts";
 
 export type NodeType =
     | "Program"
@@ -184,6 +184,7 @@ export interface CallExpr extends Expr {
 }
 
 export interface LambdaExpr extends Expr {
+    params: ArgsValue[];
     kind: "LambdaExpr";
     externalVars: Identifier[]; // Variables captured from the outer scope
     args: { id: Identifier; type: TypesNative | TypesNative[] }[];
