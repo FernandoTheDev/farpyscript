@@ -1,0 +1,5 @@
+new name: string = "Fernando"
+
+print(name.at(0)) // F
+print(name.length()) // 8
+print(2 ** name.length())

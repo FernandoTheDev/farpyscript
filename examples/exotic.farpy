@@ -1,0 +1,17 @@
+new mut name: string = "Fernando" print(name) new lambda: void = fn |name|(): void { name = "Cabral" print(name) } lambda()  print(name)
+
+/**
+new mut name: string = "Fernando"
+
+print(name)
+
+new lambda: void = fn |name|(): void
+{
+    name = "Cabral"
+    print(name)
+}
+
+lambda()
+
+print(name)
+*/

@@ -11,4 +11,4 @@ build:
 
 install: build
 	@echo "Copying the binary to $(DESTDIR)..."
-	@sudo cp $(BUILD_PATH) $(DESTDIR)
+	@sudo cp -f $(BUILD_PATH) $(DESTDIR)

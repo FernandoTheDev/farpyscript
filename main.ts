@@ -94,7 +94,8 @@ if (parsedArgs.repl) {
         const runtime: Runtime = new Runtime(context);
         runtime.evaluate(program);
       } catch (error: any) {
-        console.error("Error processing code:", error.message);
+        console.log(error);
+        console.error("Error processing code:", error);
       }
     }
     // Reseta o buffer e o balance para o próximo bloco

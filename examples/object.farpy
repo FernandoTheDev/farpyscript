@@ -1,0 +1,10 @@
+new obj: object = {
+    name: "Fernando",
+    age: 17,
+    data: {
+        ...
+    }
+}
+
+obj.name = ...
+print(obj.name)

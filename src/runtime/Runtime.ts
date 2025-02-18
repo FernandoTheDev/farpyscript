@@ -11,6 +11,7 @@ import {
   IfStatement,
   IncrementExpr,
   LambdaExpr,
+  MemberCallExpr,
   Program,
   Stmt,
   VarDeclaration,
@@ -40,6 +41,7 @@ import FunctionDeclarationRuntime from "./declarations/FunctionDeclarationRuntim
 import { IfStatementRuntime } from "./statements/IfStatementRuntime.ts";
 import { ElseStatementRuntime } from "./statements/ElseStatementRuntime.ts";
 import { LambdaExpressionRuntime } from "./expressions/LambdaExpressionRuntime.ts";
+import { MemberCallExpressionRuntime } from "./expressions/MemberCallExpressionRuntime.ts";
 export default class Runtime {
   private context: Context;
 
@@ -84,6 +86,12 @@ export default class Runtime {
       case "CallExpr":
         return CallExpressionRuntime.evaluate(
           stmt as CallExpr,
+          this.context,
+          this,
+        );
+      case "MemberCallExpr":
+        return MemberCallExpressionRuntime.evaluate(
+          stmt as MemberCallExpr,
           this.context,
           this,
         );

@@ -1,0 +1,19 @@
+new map: Map<int, int> = Map()
+
+fn fibonacci(n: int): int 
+{
+    if map.has(n)
+    {
+        return map.get(n)
+    }
+    
+    if n <= 1
+    {
+        return n
+    }
+
+    map.set(n, fibonacci(n - 1) + fibonacci(n - 2))
+    return map.get(n)
+}
+
+print(fibonacci(40))
