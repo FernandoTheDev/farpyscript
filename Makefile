@@ -2,7 +2,7 @@ SRC_DIR=src
 MAIN_FILE=main.ts
 OUTPUT_BIN=bin/farpy
 
-BIN_DIR=/home/fernandodev/farpyscript/bin
+BIN_DIR=/bin
 DEST_DIR=/usr/local/bin
 BASHRC=$(HOME)/.bashrc
 ZSHRC=$(HOME)/.zshrc
