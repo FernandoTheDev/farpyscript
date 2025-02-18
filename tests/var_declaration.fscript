@@ -1,0 +1,5 @@
+new mut x: int|float|string|binary|bool|null = 10
+x = 0b10
+x = 10.1
+x = "100"
+x = null

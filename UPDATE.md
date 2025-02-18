@@ -1,18 +1,6 @@
 # Features
 
-## Built in types
-
-```
-string
-int
-float
-boolean
-null
-void
-binary
-```
-
-## Built in constants
+## Constants
 ```
 true
 false
@@ -139,27 +127,4 @@ print("Fernando is " + age + " years old") // Fernando is 17 years old
 
 ## Lambda
 
-The type of a lambda defines the type of a return of something, argument type and variable type, instead of a lambda<T>, it only uses the T of that lambda's return
-
-External variables are optional, if you don't want to call one, you don't need to pass the pipes.
-
-```
-<EXTERNAL_VARS> = | <ID>, ... |
-<ARGS> = <ID> : <TYPES> , ...
-fn | <EXTERNAL_VARS> | ( <ARGS> ) : <RETURN_TYPE> <BLOCK>
-
-new x: int = 1
-
-new lambda: int = fn |x|(y: int): int { // x is a external variable
-    return PI * (x + y)
-}
-
-print(lambda(100))
-
-fn testing(other: int): void
-{
-    print(other(100))
-}
-
-testing(lambda)
-```
+In development...

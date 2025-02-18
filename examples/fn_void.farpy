@@ -1,6 +1,0 @@
-fn hello(name: string): void
-{
-    print("Hello " + name)
-}
-
-hello("Fernando")

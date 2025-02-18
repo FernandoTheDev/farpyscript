@@ -1,32 +1,32 @@
 import {
-  AssignmentDeclaration,
-  BinaryExpr,
-  BinaryLiteral,
-  CallExpr,
-  DecrementExpr,
-  ElifStatement,
-  ElseStatement,
-  FunctionDeclaration,
-  Identifier,
-  IfStatement,
-  IncrementExpr,
-  LambdaExpr,
-  Program,
-  Stmt,
-  VarDeclaration,
+    AssignmentDeclaration,
+    BinaryExpr,
+    BinaryLiteral,
+    CallExpr,
+    DecrementExpr,
+    ElifStatement,
+    ElseStatement,
+    FunctionDeclaration,
+    Identifier,
+    IfStatement,
+    IncrementExpr,
+    LambdaExpr,
+    Program,
+    Stmt,
+    VarDeclaration,
 } from "../backend/AST.ts";
 import { ErrorReporter } from "../error/ErrorReporter.ts";
 import {
-  BooleanValue,
-  FloatValue,
-  IntValue,
-  NullValue,
-  RuntimeValue,
-  VALUE_BOOL,
-  VALUE_FLOAT,
-  VALUE_INT,
-  VALUE_NULL,
-  VALUE_STRING,
+    BooleanValue,
+    FloatValue,
+    IntValue,
+    NullValue,
+    RuntimeValue,
+    VALUE_BOOL,
+    VALUE_FLOAT,
+    VALUE_INT,
+    VALUE_NULL,
+    VALUE_STRING,
 } from "./Values.ts";
 import VarDeclarationRuntime from "./declarations/VarDeclarationRuntime.ts";
 import Context from "./context/Context.ts";
@@ -41,296 +41,298 @@ import { IfStatementRuntime } from "./statements/IfStatementRuntime.ts";
 import { ElseStatementRuntime } from "./statements/ElseStatementRuntime.ts";
 import { LambdaExpressionRuntime } from "./expressions/LambdaExpressionRuntime.ts";
 export default class Runtime {
-  private context: Context;
+    private context: Context;
 
-  public constructor(context: Context) {
-    this.context = context;
-  }
-
-  public evaluate(stmt: Stmt): RuntimeValue {
-    // console.log(stmt);
-    switch (stmt.kind) {
-      case "Program":
-        return this.evaluate_program(stmt as Program);
-      case "IntLiteral":
-        return VALUE_INT(stmt.value, stmt.loc);
-      case "FloatLiteral":
-        return VALUE_FLOAT(stmt.value, stmt.loc);
-      case "BinaryLiteral":
-        return this.evaluate_binary_literal(stmt as BinaryLiteral);
-      case "NullLiteral":
-        return VALUE_NULL(null, stmt.loc);
-      case "StringLiteral":
-        return VALUE_STRING(stmt.value, stmt.loc);
-      case "BinaryExpr":
-        return this.evaluate_binary_expr(stmt as BinaryExpr);
-      case "ReturnStatement": {
-        const result = this.evaluate(stmt.value);
-        result.ret = true;
-        return result;
-      }
-      case "VarDeclaration":
-        return VarDeclarationRuntime.evaluate(
-          stmt as VarDeclaration,
-          this.context,
-          this,
-        );
-      case "FunctionDeclaration":
-        return FunctionDeclarationRuntime.evaluate(
-          stmt as FunctionDeclaration,
-          this.context,
-          this,
-        );
-      case "CallExpr":
-        return CallExpressionRuntime.evaluate(
-          stmt as CallExpr,
-          this.context,
-          this,
-        );
-      case "AssignmentDeclaration":
-        return AssignmentDeclarationRuntime.evaluate(
-          stmt as AssignmentDeclaration,
-          this.context,
-          this,
-        );
-      case "Identifier":
-        return IdentifierExpressionRuntime.evaluate(
-          stmt as Identifier,
-          this.context,
-          this,
-        );
-      case "DecrementExpr":
-        return DecrementExpressionRuntime.evaluate(
-          stmt as DecrementExpr,
-          this.context,
-          this,
-        );
-      case "IncrementExpr":
-        return IncrementExpressionRuntime.evaluate(
-          stmt as IncrementExpr,
-          this.context,
-          this,
-        );
-      case "IfStatement":
-        return IfStatementRuntime.evaluate(
-          stmt as IfStatement,
-          this.context,
-          this,
-        );
-      case "ElseStatement":
-        return ElseStatementRuntime.evaluate(
-          stmt as ElseStatement,
-          this.context,
-          this,
-        );
-      case "ElifStatement":
-        return IfStatementRuntime.evaluate(
-          stmt as ElifStatement,
-          this.context,
-          this,
-        );
-      case "LambdaExpr":
-        return LambdaExpressionRuntime.evaluate(
-          stmt as LambdaExpr,
-          this.context,
-          this,
-        );
-      default:
-        ErrorReporter.showError(
-          `Node undefined ${stmt.kind}`,
-          stmt.loc,
-        );
-        Deno.exit();
-    }
-  }
-
-  private evaluate_program(program: Program): RuntimeValue {
-    let lastEval: RuntimeValue = {
-      type: "null",
-      value: null,
-    } as NullValue;
-
-    if (program.body == undefined) {
-      return lastEval;
+    public constructor(context: Context) {
+        this.context = context;
     }
 
-    for (const statement of program.body) {
-      lastEval = this.evaluate(statement);
+    public evaluate(stmt: Stmt): RuntimeValue {
+        // console.log(stmt);
+        switch (stmt.kind) {
+            case "Program":
+                return this.evaluate_program(stmt as Program);
+            case "IntLiteral":
+                return VALUE_INT(stmt.value, stmt.loc);
+            case "FloatLiteral":
+                return VALUE_FLOAT(stmt.value, stmt.loc);
+            case "BinaryLiteral":
+                return this.evaluate_binary_literal(stmt as BinaryLiteral);
+            case "NullLiteral":
+                return VALUE_NULL(null, stmt.loc);
+            case "StringLiteral":
+                return VALUE_STRING(stmt.value, stmt.loc);
+            case "BinaryExpr":
+                return this.evaluate_binary_expr(stmt as BinaryExpr);
+            case "ReturnStatement": {
+                const result = this.evaluate(stmt.value);
+                result.ret = true;
+                return result;
+            }
+            case "VarDeclaration":
+                return VarDeclarationRuntime.evaluate(
+                    stmt as VarDeclaration,
+                    this.context,
+                    this,
+                );
+            case "FunctionDeclaration":
+                return FunctionDeclarationRuntime.evaluate(
+                    stmt as FunctionDeclaration,
+                    this.context,
+                    this,
+                );
+            case "CallExpr":
+                return CallExpressionRuntime.evaluate(
+                    stmt as CallExpr,
+                    this.context,
+                    this,
+                );
+            case "AssignmentDeclaration":
+                return AssignmentDeclarationRuntime.evaluate(
+                    stmt as AssignmentDeclaration,
+                    this.context,
+                    this,
+                );
+            case "Identifier":
+                return IdentifierExpressionRuntime.evaluate(
+                    stmt as Identifier,
+                    this.context,
+                    this,
+                );
+            case "DecrementExpr":
+                return DecrementExpressionRuntime.evaluate(
+                    stmt as DecrementExpr,
+                    this.context,
+                    this,
+                );
+            case "IncrementExpr":
+                return IncrementExpressionRuntime.evaluate(
+                    stmt as IncrementExpr,
+                    this.context,
+                    this,
+                );
+            case "IfStatement":
+                return IfStatementRuntime.evaluate(
+                    stmt as IfStatement,
+                    this.context,
+                    this,
+                );
+            case "ElseStatement":
+                return ElseStatementRuntime.evaluate(
+                    stmt as ElseStatement,
+                    this.context,
+                    this,
+                );
+            case "ElifStatement":
+                return IfStatementRuntime.evaluate(
+                    stmt as ElifStatement,
+                    this.context,
+                    this,
+                );
+            case "LambdaExpr":
+                return LambdaExpressionRuntime.evaluate(
+                    stmt as LambdaExpr,
+                    this.context,
+                    this,
+                );
+            default:
+                ErrorReporter.showError(
+                    `Node undefined ${stmt.kind}`,
+                    stmt.loc,
+                );
+                Deno.exit();
+        }
     }
 
-    return lastEval as RuntimeValue;
-  }
+    private evaluate_program(program: Program): RuntimeValue {
+        let lastEval: RuntimeValue = {
+            type: "null",
+            value: null,
+        } as NullValue;
 
-  private evaluate_binary_literal(stmt: BinaryLiteral): IntValue {
-    if (!/^0b[01]+$/.test(stmt.value)) {
-      throw new Error("Invalid binary format");
-    }
-    return VALUE_INT(parseInt(stmt.value.slice(2), 2), stmt.loc);
-  }
-
-  private evaluate_binary_expr(binary: BinaryExpr): RuntimeValue {
-    const lhs: RuntimeValue = this.evaluate(binary.left);
-    const rhs: RuntimeValue = this.evaluate(binary.right);
-
-    // console.log("Left", lhs.value);
-    // console.log("Right", rhs.value);
-
-    if (lhs.type === "string" || rhs.type === "string") {
-      if (binary.operator != "+") {
-        ErrorReporter.showError(
-          "It is not possible to perform operations with strings, to concatenate use the '+' operator.",
-          binary.loc,
-        );
-        Deno.exit();
-      }
-      return VALUE_STRING(
-        String(lhs.value) + String(rhs.value),
-        binary.loc,
-      );
-    }
-
-    const left = lhs as IntValue | FloatValue | BooleanValue;
-    const right = rhs as IntValue | FloatValue | BooleanValue;
-
-    switch (binary.operator) {
-      case "&&": {
-        if (left.type != "bool" && right.type != "bool") {
-          return VALUE_BOOL(false, binary.loc);
+        if (program.body == undefined) {
+            return lastEval;
         }
 
-        return VALUE_BOOL(
-          left.value == true && right.value == true,
-          binary.loc,
-        );
-      }
-      case "||": {
-        if (left.type != "bool" && right.type != "bool") {
-          return VALUE_BOOL(false, binary.loc);
+        for (const statement of program.body) {
+            lastEval = this.evaluate(statement);
+            // console.log(lastEval);
         }
 
-        return {
-          type: "bool",
-          value: (left.value == true || right.value == true) as boolean,
-          loc: binary.loc,
-        } as BooleanValue;
-      }
-      case "+":
-        return {
-          type: left.type === "float" || right.type === "float"
-            ? "float"
-            : "int",
-          value: Number(left.value) + Number(right.value),
-          loc: binary.loc,
-          ret: true,
-        } as IntValue | FloatValue;
-      case "-":
-        return {
-          type: left.type === "float" || right.type === "float"
-            ? "float"
-            : "int",
-          value: Number(left.value) - Number(right.value),
-          loc: binary.loc,
-          ret: true,
-        } as IntValue | FloatValue;
-      case "*":
-        return {
-          type: left.type === "float" || right.type === "float"
-            ? "float"
-            : "int",
-          value: Number(left.value) * Number(right.value),
-          loc: binary.loc,
-          ret: true,
-        } as IntValue | FloatValue;
-      case "**":
-        return {
-          type: left.type === "float" || right.type === "float"
-            ? "float"
-            : "int",
-          value: Number(left.value) ** Number(right.value),
-          loc: binary.loc,
-          ret: true,
-        } as IntValue | FloatValue;
-      case "/":
-        if (Number(right.value) === 0) {
-          throw new Error("Division by zero is not allowed.");
-        }
-        return {
-          type: "float",
-          value: Number(left.value) / Number(right.value),
-          loc: binary.loc,
-          ret: true,
-        } as FloatValue;
-      case "%":
-        return {
-          type: "int",
-          value: Number(left.value) % Number(right.value),
-          loc: binary.loc,
-          ret: true,
-        } as IntValue;
-      case "==":
-        return {
-          type: "bool",
-          value: left.value === right.value,
-          loc: binary.loc,
-          ret: true,
-        } as BooleanValue;
-      case "!=":
-        return {
-          type: "bool",
-          value: left.value !== right.value,
-          loc: binary.loc,
-          ret: true,
-        } as BooleanValue;
-      case ">":
-        return {
-          type: "bool",
-          value: Number(left.value) > Number(right.value),
-          loc: binary.loc,
-          ret: true,
-        } as BooleanValue;
-      case "<":
-        return {
-          type: "bool",
-          value: Number(left.value) < Number(right.value),
-          loc: binary.loc,
-          ret: true,
-        } as BooleanValue;
-      case ">=":
-        return {
-          type: "bool",
-          value: Number(left.value) >= Number(right.value),
-          loc: binary.loc,
-          ret: true,
-        } as BooleanValue;
-      case "<=":
-        return {
-          type: "bool",
-          value: Number(left.value) <= Number(right.value),
-          loc: binary.loc,
-          ret: true,
-        } as BooleanValue;
-      default:
-        ErrorReporter.showError(
-          `Unknown operator ${binary.operator}`,
-          binary.loc,
-        );
-        Deno.exit();
+        return lastEval as RuntimeValue;
     }
-  }
 
-  public validateType(
-    value: Stmt | RuntimeValue,
-    type: TypesNative[],
-  ): boolean {
-    if (!type.includes(value.type as TypesNative) && value.type !== "id") {
-      ErrorReporter.showError(
-        `The expected type does not match the type of the value. Expected one of ${
-          type.join(", ")
-        } and received ${value.type}.`,
-        value.loc,
-      );
-      Deno.exit(1);
+    private evaluate_binary_literal(stmt: BinaryLiteral): IntValue {
+        if (!/^0b[01]+$/.test(stmt.value)) {
+            throw new Error("Invalid binary format");
+        }
+        return VALUE_INT(parseInt(stmt.value.slice(2), 2), stmt.loc);
     }
-    return true;
-  }
+
+    private evaluate_binary_expr(binary: BinaryExpr): RuntimeValue {
+        const lhs: RuntimeValue = this.evaluate(binary.left);
+        const rhs: RuntimeValue = this.evaluate(binary.right);
+
+        // console.log("Left", lhs.value);
+        // console.log("Right", rhs.value);
+
+        if (lhs.type === "string" || rhs.type === "string") {
+            if (binary.operator != "+") {
+                ErrorReporter.showError(
+                    "It is not possible to perform operations with strings, to concatenate use the '+' operator.",
+                    binary.loc,
+                );
+                Deno.exit();
+            }
+            return VALUE_STRING(
+                String(lhs.value) + String(rhs.value),
+                binary.loc,
+            );
+        }
+
+        const left = lhs as IntValue | FloatValue | BooleanValue;
+        const right = rhs as IntValue | FloatValue | BooleanValue;
+
+        switch (binary.operator) {
+            case "&&": {
+                if (left.type != "bool" && right.type != "bool") {
+                    return VALUE_BOOL(false, binary.loc);
+                }
+
+                return VALUE_BOOL(
+                    left.value == true && right.value == true,
+                    binary.loc,
+                );
+            }
+            case "||": {
+                if (left.type != "bool" && right.type != "bool") {
+                    return VALUE_BOOL(false, binary.loc);
+                }
+
+                return {
+                    type: "bool",
+                    value:
+                        (left.value == true || right.value == true) as boolean,
+                    loc: binary.loc,
+                } as BooleanValue;
+            }
+            case "+":
+                return {
+                    type: left.type === "float" || right.type === "float"
+                        ? "float"
+                        : "int",
+                    value: Number(left.value) + Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
+                } as IntValue | FloatValue;
+            case "-":
+                return {
+                    type: left.type === "float" || right.type === "float"
+                        ? "float"
+                        : "int",
+                    value: Number(left.value) - Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
+                } as IntValue | FloatValue;
+            case "*":
+                return {
+                    type: left.type === "float" || right.type === "float"
+                        ? "float"
+                        : "int",
+                    value: Number(left.value) * Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
+                } as IntValue | FloatValue;
+            case "**":
+                return {
+                    type: left.type === "float" || right.type === "float"
+                        ? "float"
+                        : "int",
+                    value: Number(left.value) ** Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
+                } as IntValue | FloatValue;
+            case "/":
+                if (Number(right.value) === 0) {
+                    throw new Error("Division by zero is not allowed.");
+                }
+                return {
+                    type: "float",
+                    value: Number(left.value) / Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
+                } as FloatValue;
+            case "%":
+                return {
+                    type: "int",
+                    value: Number(left.value) % Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
+                } as IntValue;
+            case "==":
+                return {
+                    type: "bool",
+                    value: left.value === right.value,
+                    loc: binary.loc,
+                    ret: true,
+                } as BooleanValue;
+            case "!=":
+                return {
+                    type: "bool",
+                    value: left.value !== right.value,
+                    loc: binary.loc,
+                    ret: true,
+                } as BooleanValue;
+            case ">":
+                return {
+                    type: "bool",
+                    value: Number(left.value) > Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
+                } as BooleanValue;
+            case "<":
+                return {
+                    type: "bool",
+                    value: Number(left.value) < Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
+                } as BooleanValue;
+            case ">=":
+                return {
+                    type: "bool",
+                    value: Number(left.value) >= Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
+                } as BooleanValue;
+            case "<=":
+                return {
+                    type: "bool",
+                    value: Number(left.value) <= Number(right.value),
+                    loc: binary.loc,
+                    ret: true,
+                } as BooleanValue;
+            default:
+                ErrorReporter.showError(
+                    `Unknown operator ${binary.operator}`,
+                    binary.loc,
+                );
+                Deno.exit();
+        }
+    }
+
+    public validateType(
+        value: Stmt | RuntimeValue,
+        type: TypesNative[],
+    ): boolean {
+        if (!type.includes(value.type as TypesNative) && value.type !== "id") {
+            ErrorReporter.showError(
+                `The expected type does not match the type of the value. Expected one of ${
+                    type.join(", ")
+                } and received ${value.type}.`,
+                value.loc,
+            );
+            Deno.exit(1);
+        }
+        return true;
+    }
 }
