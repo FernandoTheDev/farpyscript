@@ -6,13 +6,10 @@ BUILD_PATH := $(BUILD_DIR)/$(BINARY)
 all: build install
 
 build:
-	@echo "Compilando o projeto..."
+	@echo "Compiling the project..."
 	deno run compile
 
 install: build
-	@echo "Instalando o binário em $(DESTDIR)..."
+	@echo "Copying the binary to $(DESTDIR)..."
 	@sudo cp $(BUILD_PATH) $(DESTDIR)
 
-# clean:
-# 	@echo "Limpando arquivos gerados..."
-# 	@rm -rf $(BUILD_DIR)
