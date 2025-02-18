@@ -1,133 +1,166 @@
 import { Lexer } from "./src/frontend/Lexer.ts";
-import { Token } from "./src/frontend/Token.ts";
+import { Loc, Token } from "./src/frontend/Token.ts";
 import Parser from "./src/backend/Parser.ts";
-import { Program } from "./src/backend/AST.ts";
+import { AST_IDENTIFIER, Program } from "./src/backend/AST.ts";
 import Runtime from "./src/runtime/Runtime.ts";
 import Context from "./src/runtime/context/Context.ts";
-import { parseArgs } from "@std/cli";
-import { Colorize } from "./src/utils/Colorize.ts";
-import { define_env } from "./src/runtime/context/Context.ts";
+import {
+    ArgsValue,
+    FunctionNativeDeclarationValue,
+    NATIVE_FN,
+    TypesNative,
+    VALUE_BOOL,
+    VALUE_FLOAT,
+    VALUE_INT,
+    VALUE_NULL,
+    VarDeclarationValue,
+} from "./src/runtime/Values.ts";
 
-const parsedArgs = parseArgs(Deno.args, {
-  alias: {
-    h: "help",
-    v: "version",
-    r: "repl",
-  },
-  boolean: ["help", "version", "repl"],
-});
+const args: string[] = Deno.args;
+const context: Context = new Context();
 
-const VERSION = "v0.1.0";
+// Let's define some language constants, ignoring good practices, this is just for testing {{
+const loc = {} as Loc;
 
-if (parsedArgs.help) {
-  console.log(
-    `${Colorize.bold("Usage:")}
-  farpy [options] <file.farpy>
+// true
+context.new_var(
+    AST_IDENTIFIER("true", loc),
+    { types: ["bool"], value: VALUE_BOOL(true, loc) } as VarDeclarationValue,
+    true,
+);
 
-${Colorize.bold("Options:")}
-  -h, --help      Show this help message.
-  -v, --version   Shows version and runtime information.
-  -r, --repl      Starts the interactive REPL.`,
-  );
-  Deno.exit(0);
-}
+// false
+context.new_var(
+    AST_IDENTIFIER("false", loc),
+    { types: ["bool"], value: VALUE_BOOL(false, loc) } as VarDeclarationValue,
+    true,
+);
 
-if (parsedArgs.version) {
-  console.log(
-    Colorize.bold(
-      `FarpyScript - ${Colorize.underline(Colorize.blue(VERSION))}`,
-    ),
-  );
-  Deno.exit(0);
-}
+// null
+context.new_var(
+    AST_IDENTIFIER("null", loc),
+    { types: ["null"], value: VALUE_NULL(null, loc) } as VarDeclarationValue,
+    true,
+);
 
-const context: Context = define_env(new Context());
+// PI
+context.new_var(
+    AST_IDENTIFIER("PI", loc),
+    {
+        types: ["float"],
+        value: VALUE_FLOAT(Math.PI, loc),
+    } as VarDeclarationValue,
+    true,
+);
 
-if (parsedArgs.repl) {
-  console.log(
-    Colorize.bold(
-      `FarpyScript ${Colorize.underline(Colorize.blue(VERSION))} - REPL`,
-    ),
-  );
+// print(x, y, ...)
+context.new_function(
+    AST_IDENTIFIER("print", loc),
+    {
+        kind: "native-fn",
+        infinity: true,
+        args: [] as ArgsValue[],
+        type: ["null"] as TypesNative[],
+        context: new Context(context, true),
+        fn: NATIVE_FN((args, _scope) => {
+            for (const arg of args) {
+                console.log(arg.value);
+            }
 
-  let inputBuffer = "";
-  let balance = 0;
-  while (true) {
-    // Se já há conteúdo acumulado, usamos um prompt com padding proporcional ao balance.
-    const promptSymbol = inputBuffer
-      ? ".".repeat(Math.max((balance * 3) == 0 ? 3 : balance * 3, 1))
-      : ">";
-    const line: string = prompt(promptSymbol) ?? "";
+            return VALUE_NULL(null, loc);
+        }),
+    } as FunctionNativeDeclarationValue,
+);
 
-    if (!inputBuffer && line.trim() === "exit") {
-      console.log("Bye");
-      break;
-    }
+// sum(x, y)
+context.new_function(
+    AST_IDENTIFIER("sum", loc),
+    {
+        kind: "native-fn",
+        infinity: false,
+        args: [
+            { type: ["int", "float"] },
+            { type: ["int", "float"] },
+        ] as ArgsValue[],
+        type: ["int", "float"] as TypesNative[],
+        context: new Context(context, true),
+        fn: NATIVE_FN((args, _scope) => {
+            const r = Number(args[0]?.value) + Number(args[1]?.value);
+            return VALUE_INT(r, loc);
+        }),
+    } as FunctionNativeDeclarationValue,
+);
 
-    // Acumula a linha lida
-    inputBuffer += line + "\n";
+// fib(x)
+context.new_function(
+    AST_IDENTIFIER("fib", loc),
+    {
+        kind: "native-fn",
+        infinity: false,
+        args: [
+            { type: ["int"] },
+        ] as ArgsValue[],
+        type: ["int"] as TypesNative[],
+        context: new Context(context, true),
+        fn: NATIVE_FN((args, _scope) => {
+            const fib = (n: number): number => {
+                if (n <= 1) {
+                    return n;
+                }
+                return fib(n - 1) + fib(n - 2);
+            };
+            const n = Number(args[0]?.value);
+            return VALUE_INT(fib(n), loc);
+        }),
+    } as FunctionNativeDeclarationValue,
+);
 
-    // Atualiza o balance com base na linha atual
-    for (const char of line) {
-      if (char === "{") {
-        balance++;
-      } else if (char === "}") {
-        balance--;
-      }
-    }
+if (args.length < 1) {
+    console.log("FarpyScript - Repl v0.0.1");
 
-    // Evita que o balance fique negativo
-    if (balance < 0) {
-      balance = 0;
-    }
+    while (true) {
+        const input: string = prompt(">") ?? "";
 
-    // Se ainda houver blocos abertos, continua a leitura
-    if (balance > 0) continue;
+        if (!input) {
+            continue;
+        }
 
-    const code = inputBuffer.trim();
-    if (code) {
-      try {
-        const lexer: Lexer = new Lexer("repl", code);
+        if (input.includes("exit")) {
+            console.log("Bye");
+            break;
+        }
+
+        const lexer: Lexer = new Lexer("repl", input);
         const tokens: Token[] = lexer.tokenize();
+        // console.log(tokens);
+
         const parser: Parser = new Parser(tokens);
         const program: Program = parser.parse();
+        // console.log(program);
+
         const runtime: Runtime = new Runtime(context);
         runtime.evaluate(program);
-      } catch (error: any) {
-        console.error("Error processing code:", error.message);
-      }
+        // console.log(runtime.evaluate(program).value);
     }
-    // Reseta o buffer e o balance para o próximo bloco
-    inputBuffer = "";
-    balance = 0;
-  }
-  Deno.exit(0);
+    Deno.exit();
 }
 
-if (parsedArgs._.length < 1) {
-  console.error("Error: No file specified.");
-  console.error("Usage -h or --help to see usage.");
-  Deno.exit(1);
-}
+const file: string = args[0] ?? "";
+const source: string = Deno.readTextFileSync(file);
 
-const file: string = parsedArgs._[0] as string;
-
-if (!file.endsWith(".farpy")) {
-  console.error("Error: The file must have a .farpy extension");
-  Deno.exit(1);
-}
-
-let source: string;
-try {
-  source = Deno.readTextFileSync(file);
-} catch (error: any) {
-  console.error("Error reading file:", error.message);
-  Deno.exit(1);
+if (!source) {
+    console.log("Erro ao ler arquivo.");
+    Deno.exit();
 }
 
 const lexer: Lexer = new Lexer(file, source);
 const tokens: Token[] = lexer.tokenize();
+// console.log(tokens);
+
 const parser: Parser = new Parser(tokens);
 const program: Program = parser.parse();
+// console.log(program);
+
 const runtime: Runtime = new Runtime(context);
 runtime.evaluate(program);
+// console.log(runtime.evaluate(program));

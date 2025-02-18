@@ -5,10 +5,3 @@ new lambda: int = fn |x|(y: int): int {
 }
 
 print(lambda(100))
-
-fn testing(other: int): void
-{
-    print(other(100))
-}
-
-testing(lambda)
