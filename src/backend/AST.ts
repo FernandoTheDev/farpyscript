@@ -11,6 +11,9 @@ export type NodeType =
   | "ElseStatement"
   | "ElifStatement"
   | "BlockStmt"
+  | "ImportStatement"
+  | "ForStatement"
+  | "ForEachStatement"
   | "ReturnStatement"
   | "VarDeclaration"
   | "AssignmentDeclaration"
@@ -24,7 +27,9 @@ export type NodeType =
   | "DecrementExpr"
   | "IndexingExpr"
   | "MemberCallExpr"
-  | "BinaryExpr";
+  | "MemberExpr"
+  | "BinaryExpr"
+  | "BreakStatement";
 
 export interface Stmt {
   kind: NodeType;
@@ -208,6 +213,13 @@ export interface MemberCallExpr extends Expr {
   member: CallExpr;
 }
 
+export interface MemberExpr extends Expr {
+  kind: "MemberExpr";
+  type: TypesNative | TypesNative[];
+  id: Identifier;
+  member: Identifier;
+}
+
 // }}
 
 // Statements {{
@@ -247,6 +259,41 @@ export interface BlockStmt extends Stmt {
   kind: "BlockStmt";
   body: Stmt[]; // Lista de declarações dentro do bloco
   endToken: Token; // Token de fechamento, útil para informações de localização
+}
+
+export interface ImportStatement extends Stmt {
+  kind: "ImportStatement";
+  module: Identifier;
+  check: boolean; // check if is alias or not
+  alias: Identifier;
+}
+
+// for <VAR_DECL | ASSING_DECL> ; <TEST> ; <INCRE | DECRE> {}
+// ex.: for new mut i: int = 0; i < name.length(); i++ {}
+// ex.: i = 0; i < name.length(); i++ {}
+export interface ForStatement extends Stmt {
+  kind: "ForStatement";
+  type: TypesNative | TypesNative[]; // Type of return if exists
+  value: Expr | Expr[] | Stmt; // Value of return if exists
+  init: VarDeclaration | AssignmentDeclaration;
+  test: BinaryExpr;
+  update: IncrementExpr | DecrementExpr;
+  body: Stmt[];
+}
+
+// for <VAR_DECL> : <DICTIONARY> {}
+// ex.: for new mut user : users {}
+export interface ForEachStatement extends Stmt {
+  kind: "ForEachStatement";
+  type: TypesNative | TypesNative[]; // Type of return if exists
+  value: Expr | Expr[] | Stmt; // Value of return if exists
+  init: VarDeclaration;
+  from: Identifier;
+  body: Stmt[];
+}
+
+export interface BreakStatement extends Stmt {
+  kind: "BreakStatement";
 }
 
 // }}

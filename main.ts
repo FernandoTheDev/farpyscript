@@ -7,6 +7,7 @@ import Context from "./src/runtime/context/Context.ts";
 import { parseArgs } from "@std/cli";
 import { Colorize } from "./src/utils/Colorize.ts";
 import { define_env } from "./src/runtime/context/Context.ts";
+import { repl } from "./src/repl.ts";
 
 const parsedArgs = parseArgs(Deno.args, {
   alias: {
@@ -35,7 +36,7 @@ ${Colorize.bold("Options:")}
 if (parsedArgs.version) {
   console.log(
     Colorize.bold(
-      `FarpyScript - ${Colorize.underline(Colorize.blue(VERSION))}`,
+      `Farpy - ${Colorize.underline(Colorize.blue(VERSION))}`,
     ),
   );
   Deno.exit(0);
@@ -44,65 +45,8 @@ if (parsedArgs.version) {
 const context: Context = define_env(new Context());
 
 if (parsedArgs.repl) {
-  console.log(
-    Colorize.bold(
-      `FarpyScript ${Colorize.underline(Colorize.blue(VERSION))} - REPL`,
-    ),
-  );
-
-  let inputBuffer = "";
-  let balance = 0;
-  while (true) {
-    // Se já há conteúdo acumulado, usamos um prompt com padding proporcional ao balance.
-    const promptSymbol = inputBuffer
-      ? ".".repeat(Math.max((balance * 3) == 0 ? 3 : balance * 3, 1))
-      : ">";
-    const line: string = prompt(promptSymbol) ?? "";
-
-    if (!inputBuffer && line.trim() === "exit") {
-      console.log("Bye");
-      break;
-    }
-
-    // Acumula a linha lida
-    inputBuffer += line + "\n";
-
-    // Atualiza o balance com base na linha atual
-    for (const char of line) {
-      if (char === "{") {
-        balance++;
-      } else if (char === "}") {
-        balance--;
-      }
-    }
-
-    // Evita que o balance fique negativo
-    if (balance < 0) {
-      balance = 0;
-    }
-
-    // Se ainda houver blocos abertos, continua a leitura
-    if (balance > 0) continue;
-
-    const code = inputBuffer.trim();
-    if (code) {
-      try {
-        const lexer: Lexer = new Lexer("repl", code);
-        const tokens: Token[] = lexer.tokenize();
-        const parser: Parser = new Parser(tokens);
-        const program: Program = parser.parse();
-        const runtime: Runtime = new Runtime(context);
-        runtime.evaluate(program);
-      } catch (error: any) {
-        console.log(error);
-        console.error("Error processing code:", error);
-      }
-    }
-    // Reseta o buffer e o balance para o próximo bloco
-    inputBuffer = "";
-    balance = 0;
-  }
-  Deno.exit(0);
+  repl();
+  Deno.exit();
 }
 
 if (parsedArgs._.length < 1) {
@@ -113,8 +57,8 @@ if (parsedArgs._.length < 1) {
 
 const file: string = parsedArgs._[0] as string;
 
-if (!file.endsWith(".farpy")) {
-  console.error("Error: The file must have a .farpy extension");
+if (!file.endsWith(".farpy") && !file.endsWith(".fp")) {
+  console.error("Error: The file must have a .farpy or .fp extension");
   Deno.exit(1);
 }
 

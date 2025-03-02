@@ -2,6 +2,15 @@ import { Expr as _Expr, Identifier, Stmt } from "../backend/AST.ts";
 import { Loc, NativeValue } from "../frontend/Token.ts";
 import Context from "./context/Context.ts";
 
+// export interface GenericType {
+//   base: string; // ex: "lambda", "list", etc.
+//   typeParams: TypesNative[];
+// }
+
+export interface IParsedTypes {
+  types: TypesNative[];
+}
+
 export type TypesNative =
   | "string"
   | "id"
@@ -15,7 +24,9 @@ export type TypesNative =
   | "void"
   | "lambda"
   | "object"
+  | "map"
   | FunctionType;
+// | GenericType;
 
 export const TypesNativeArray: string[] = [
   "string",
@@ -30,10 +41,12 @@ export const TypesNativeArray: string[] = [
   "void",
   "lambda",
   "object",
+  "map",
   "FunctionType",
 ];
 
 export interface RuntimeValue {
+  kind?: string;
   type?: TypesNative | TypesNative[];
   value: NativeValue;
   ret: boolean; // Para controle de fluxo
@@ -95,6 +108,7 @@ export function VALUE_VOID(loc: Loc): VoidValue {
 }
 
 export interface VarDeclarationValue {
+  kind: "id";
   types: TypesNative[];
   value: RuntimeValue;
 }
@@ -148,4 +162,14 @@ export interface LambdaValue extends RuntimeValue {
   args: ArgsValue[];
   body: Stmt[];
   externalVars: Identifier[];
+}
+
+export interface ImportStatementValue extends RuntimeValue {
+  kind: "native-fn"; //
+  values: Map<string, RuntimeValue>[];
+}
+
+export interface MapValue extends RuntimeValue {
+  type: "map";
+  map: Map<NativeValue, NativeValue>;
 }

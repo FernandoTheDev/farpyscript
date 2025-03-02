@@ -1,0 +1,8 @@
+import io
+import utils
+import math as m
+
+new name: string = io.readline("Name:")
+new age: int = utils.toInt(io.readline("Age:"))
+
+print(io.format("Hello {name}, you are {age} years old."))

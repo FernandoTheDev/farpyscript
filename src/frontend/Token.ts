@@ -11,6 +11,7 @@ export enum TokenType {
   RETURN, // return EXPR 7
   IMPORT, // import x 8
   AS, // import x as y 9
+  BREAK, // break 44
 
   IDENTIFIER, // omg 10
 
@@ -90,4 +91,5 @@ export const Keywords: Record<string, TokenType> = {
   "while": TokenType.WHILE,
   "import": TokenType.IMPORT,
   "as": TokenType.AS,
+  "break": TokenType.BREAK,
 };

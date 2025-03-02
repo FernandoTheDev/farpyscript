@@ -2,16 +2,20 @@ import {
   AssignmentDeclaration,
   BinaryExpr,
   BinaryLiteral,
+  BreakStatement,
   CallExpr,
   DecrementExpr,
   ElifStatement,
   ElseStatement,
+  ForStatement,
   FunctionDeclaration,
   Identifier,
   IfStatement,
+  ImportStatement,
   IncrementExpr,
   LambdaExpr,
   MemberCallExpr,
+  MemberExpr,
   Program,
   Stmt,
   VarDeclaration,
@@ -42,6 +46,10 @@ import { IfStatementRuntime } from "./statements/IfStatementRuntime.ts";
 import { ElseStatementRuntime } from "./statements/ElseStatementRuntime.ts";
 import { LambdaExpressionRuntime } from "./expressions/LambdaExpressionRuntime.ts";
 import { MemberCallExpressionRuntime } from "./expressions/MemberCallExpressionRuntime.ts";
+import { ImportStatementRuntime } from "./statements/ImportStatementRuntime.ts";
+import { MemberExpressionRuntime } from "./expressions/MemberExpressionRuntime.ts";
+import { ForStatementRuntime } from "./statements/ForStatementRuntime.ts";
+import { BreakStatementRuntime } from "./statements/BreakStatementRuntime.ts";
 export default class Runtime {
   private context: Context;
 
@@ -95,6 +103,12 @@ export default class Runtime {
           this.context,
           this,
         );
+      case "MemberExpr":
+        return MemberExpressionRuntime.evaluate(
+          stmt as MemberExpr,
+          this.context,
+          this,
+        );
       case "AssignmentDeclaration":
         return AssignmentDeclarationRuntime.evaluate(
           stmt as AssignmentDeclaration,
@@ -134,6 +148,24 @@ export default class Runtime {
       case "ElifStatement":
         return IfStatementRuntime.evaluate(
           stmt as ElifStatement,
+          this.context,
+          this,
+        );
+      case "ImportStatement":
+        return ImportStatementRuntime.evaluate(
+          stmt as ImportStatement,
+          this.context,
+          this,
+        );
+      case "ForStatement":
+        return ForStatementRuntime.evaluate(
+          stmt as ForStatement,
+          this.context,
+          this,
+        );
+      case "BreakStatement":
+        return BreakStatementRuntime.evaluate(
+          stmt as BreakStatement,
           this.context,
           this,
         );
@@ -296,13 +328,15 @@ export default class Runtime {
           loc: binary.loc,
           ret: true,
         } as BooleanValue;
-      case "<":
+      case "<": {
+        // console.log(Number(left.value) < Number(right.value));
         return {
           type: "bool",
           value: Number(left.value) < Number(right.value),
           loc: binary.loc,
           ret: true,
         } as BooleanValue;
+      }
       case ">=":
         return {
           type: "bool",

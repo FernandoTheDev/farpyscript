@@ -4,17 +4,19 @@ import {
   FunctionNativeDeclarationValue,
   FunctionValue,
   NATIVE_FN,
+  RuntimeValue,
   TypesNative,
   VALUE_BOOL,
-  VALUE_FLOAT,
-  VALUE_INT,
   VALUE_NULL,
-  VALUE_STRING,
   VALUE_VOID,
   VarDeclarationValue,
 } from "../Values.ts";
 import { ErrorReporter } from "../../error/ErrorReporter.ts";
 import { Loc } from "../../frontend/Token.ts";
+import IoModule from "../modules/IoModule.ts";
+import MathModule from "../modules/MathModule.ts";
+import UtilsModule from "../modules/UtilsModule.ts";
+import MapModule from "../modules/MapModules.ts";
 
 export function define_env(context: Context): Context {
   const loc = {} as Loc;
@@ -47,26 +49,6 @@ export function define_env(context: Context): Context {
     true,
   );
 
-  // Runtime version
-  context.new_var(
-    AST_IDENTIFIER("RUNTIME_VERSION", loc),
-    {
-      types: ["string"],
-      value: VALUE_STRING("0.1.0", loc),
-    } as VarDeclarationValue,
-    true,
-  );
-
-  // PI
-  context.new_var(
-    AST_IDENTIFIER("PI", loc),
-    {
-      types: ["float"],
-      value: VALUE_FLOAT(Math.PI, loc),
-    } as VarDeclarationValue,
-    true,
-  );
-
   // print(x, y, ...)
   context.new_function(
     AST_IDENTIFIER("print", loc),
@@ -85,43 +67,30 @@ export function define_env(context: Context): Context {
     } as FunctionNativeDeclarationValue,
   );
 
-  // sum(x, y)
-  // context.new_function(
-  //   AST_IDENTIFIER("sum", loc),
-  //   {
-  //     kind: "native-fn",
-  //     infinity: false,
-  //     args: [
-  //       { type: ["int", "float"] },
-  //       { type: ["int", "float"] },
-  //     ] as ArgsValue[],
-  //     type: ["int", "float"] as TypesNative[],
-  //     context: new Context(context, true),
-  //     fn: NATIVE_FN((args, _scope) => {
-  //       const r = Number(args[0]?.value) + Number(args[1]?.value);
-  //       return VALUE_INT(r, loc);
-  //     }),
-  //   } as FunctionNativeDeclarationValue,
-  // );
+  context.new_module(
+    AST_IDENTIFIER("math", loc),
+    new Map()
+      .set("PI", MathModule.PI())
+      .set("fibonacci", MathModule.fibonacci(context)),
+  );
 
-  // fib(x)
-  context.new_function(
-    AST_IDENTIFIER("fib", loc),
-    {
-      kind: "native-fn",
-      infinity: false,
-      args: [{ type: ["int"] }] as ArgsValue[],
-      type: ["int"] as TypesNative[],
-      context: new Context(context, true),
-      fn: NATIVE_FN((args, _scope) => {
-        const fib = (n: number): number => {
-          if (n <= 1) return n;
-          return fib(n - 1) + fib(n - 2);
-        };
-        const n = Number(args[0]?.value);
-        return VALUE_INT(fib(n), loc);
-      }),
-    } as FunctionNativeDeclarationValue,
+  context.new_module(
+    AST_IDENTIFIER("io", loc),
+    new Map()
+      .set("readline", IoModule.readline(context))
+      .set("format", IoModule.format(context)),
+  );
+
+  context.new_module(
+    AST_IDENTIFIER("utils", loc),
+    new Map()
+      .set("toInt", UtilsModule.toInt(context)),
+  );
+
+  context.new_module(
+    AST_IDENTIFIER("map", loc),
+    new Map()
+      .set("Map", MapModule.Map(context)),
   );
 
   return context;
@@ -130,6 +99,8 @@ export function define_env(context: Context): Context {
 export default class Context {
   private parent?: Context;
   private variables: Map<string, VarDeclarationValue> = new Map();
+  private modules: Map<string, Map<string, RuntimeValue>> = new Map();
+  private alias: Map<string, string> = new Map();
   private functions: Map<
     string,
     FunctionValue | FunctionNativeDeclarationValue
@@ -169,6 +140,46 @@ export default class Context {
     }
 
     return value;
+  }
+
+  public new_module(
+    module: Identifier,
+    value: Map<string, RuntimeValue>,
+  ): RuntimeValue {
+    if (this.constants.has(module.value)) {
+      ErrorReporter.showError(
+        `Module redeclaration '${module.value}'.`,
+        module.loc,
+      );
+      Deno.exit();
+    }
+
+    this.modules.set(module.value, value);
+    return VALUE_VOID(module.loc);
+  }
+
+  public new_alias(
+    alias: Identifier,
+    module: Identifier,
+  ): RuntimeValue {
+    if (!this.modules.has(module.value)) {
+      ErrorReporter.showError(
+        `Module is not exist '${module.value}'.`,
+        module.loc,
+      );
+      Deno.exit();
+    }
+
+    if (this.alias.has(alias.value)) {
+      ErrorReporter.showError(
+        `Alias ​​already exists '${alias.value}'.`,
+        alias.loc,
+      );
+      Deno.exit();
+    }
+
+    this.alias.set(alias.value, module.value);
+    return VALUE_VOID(alias.loc);
   }
 
   public new_function(
@@ -232,6 +243,22 @@ export default class Context {
   public look_up_const(var_name: string): VarDeclarationValue | undefined {
     return this.constants.get(var_name) ||
       this.parent?.look_up_const(var_name) || undefined;
+  }
+
+  public look_up_alias(
+    alias: Identifier,
+  ): Map<string, RuntimeValue> | undefined {
+    const alias_get = this.alias.get(alias.value);
+
+    return this.modules.get(alias_get ?? "") ||
+      this.parent?.look_up_module(alias_get ?? "") || undefined;
+  }
+
+  private look_up_module(
+    module: string,
+  ): Map<string, RuntimeValue> | undefined {
+    return this.modules.get(module) ||
+      this.parent?.look_up_module(module) || undefined;
   }
 
   public look_up_function(

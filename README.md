@@ -78,7 +78,7 @@ farpy -v
   - Control flow structures (if)  
 - Built-in constants  
 
-### In Progress 🚧 
+### In Progress 🚧
   
 - Type System  
   - Complex types (objects, arrays, vectors)  
@@ -113,7 +113,7 @@ All PRs will be reviewed by the main maintainer (fernandothedev).
 
 MIT License
 
-``` 
+```
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights

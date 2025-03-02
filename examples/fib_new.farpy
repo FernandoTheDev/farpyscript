@@ -1,4 +1,6 @@
-new map: Map<int, int> = Map()
+import map as m
+
+new map: map = m.Map()
 
 fn fibonacci(n: int): int 
 {
@@ -16,4 +18,4 @@ fn fibonacci(n: int): int
     return map.get(n)
 }
 
-print(fibonacci(40))
+print(fibonacci(100))

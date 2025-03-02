@@ -11,23 +11,32 @@ import {
   BinaryExpr,
   BinaryLiteral,
   BlockStmt,
+  BreakStatement,
   CallExpr,
   ElifStatement,
   ElseStatement,
   Expr,
   FloatLiteral,
+  ForEachStatement,
+  ForStatement,
   FunctionDeclaration,
   Identifier,
   IfStatement,
+  ImportStatement,
   IntLiteral,
   LambdaExpr,
   MemberCallExpr,
+  MemberExpr,
   NullLiteral,
   Program,
   Stmt,
   VarDeclaration,
 } from "./AST.ts";
-import { TypesNative, TypesNativeArray } from "../runtime/Values.ts";
+import {
+  IParsedTypes,
+  TypesNative,
+  TypesNativeArray,
+} from "../runtime/Values.ts";
 import { DecrementExpr, IncrementExpr } from "./AST.ts";
 import { ReturnStatement } from "./AST.ts";
 
@@ -242,6 +251,12 @@ export default class Parser {
         return this.parse_return_stmt();
       case TokenType.IF:
         return this.parse_if_statement();
+      case TokenType.IMPORT:
+        return this.parse_import_statement();
+      case TokenType.FOR:
+        return this.parse_for_statement();
+      case TokenType.BREAK:
+        return this.parse_break_statement();
       default:
         ErrorReporter.showError(
           "Unexpected token found during parsing!",
@@ -249,6 +264,131 @@ export default class Parser {
         );
         Deno.exit(1);
     }
+  }
+
+  private parse_break_statement(): BreakStatement {
+    const startToken: Token = this.eat();
+    return {
+      kind: "BreakStatement",
+      loc: this.getLocationFromTokens(startToken.loc, startToken.loc),
+    } as BreakStatement;
+  }
+
+  private parse_for_statement(): ForStatement | ForEachStatement {
+    const startToken: Token = this.eat();
+    const declaration = this.parse_expr();
+    const block: Stmt[] = [];
+    let value: NullLiteral | Expr | Stmt = AST_NULL({} as Loc);
+
+    if (
+      declaration.kind !== "AssignmentDeclaration" &&
+      declaration.kind !== "VarDeclaration"
+    ) {
+      ErrorReporter.showError(
+        "The declaration in the for loop can only be a VarDeclaration or AssignmentDeclaration",
+        this.getLocationFromTokens(startToken.loc, declaration.loc),
+      );
+      Deno.exit();
+    }
+
+    this.consume(
+      TokenType.SEMICOLON,
+      "Expected ';' after variable declaration or value assignment in for loop.",
+    );
+
+    if (this.peek().kind == TokenType.COLON) {
+      //
+    }
+
+    const test = this.parse_expr();
+
+    if (
+      test.kind !== "BinaryExpr"
+    ) {
+      ErrorReporter.showError(
+        "The for loop test can only be a binary expression.",
+        this.getLocationFromTokens(startToken.loc, declaration.loc),
+      );
+      Deno.exit();
+    }
+
+    this.consume(
+      TokenType.SEMICOLON,
+      "Expected ';' after test in for loop.",
+    );
+
+    const update = this.parse_expr();
+
+    if (
+      update.kind !== "IncrementExpr" && update.kind !== "DecrementExpr"
+    ) {
+      ErrorReporter.showError(
+        "The for loop update can only be an increment or decrement..",
+        this.getLocationFromTokens(startToken.loc, declaration.loc),
+      );
+      Deno.exit();
+    }
+
+    this.consume(
+      TokenType.LBRACE,
+      "Expected '{' after for loop.",
+    );
+
+    while (
+      this.is_end() == false && this.peek().kind !== TokenType.RBRACE
+    ) {
+      const expr_ = this.parse_expr();
+
+      if (expr_.kind == "ReturnStatement") {
+        value = expr_;
+      }
+
+      block.push(expr_);
+    }
+
+    this.consume(
+      TokenType.RBRACE,
+      "Expected '}'after the for loop block.",
+    );
+
+    return {
+      kind: "ForStatement",
+      type: value.type,
+      value: value,
+      init: declaration,
+      test: test,
+      update: update,
+      body: block,
+    } as unknown as ForStatement;
+  }
+
+  private parse_import_statement(): ImportStatement {
+    const startToken: Token = this.eat(); // import
+    const module: Token = this.consume( // <ID>
+      TokenType.IDENTIFIER,
+      "Module name as expected.",
+    );
+
+    let check = false;
+    let alias: Token = {
+      kind: "NULL",
+      value: null,
+      loc: module.loc,
+    } as unknown as Token;
+
+    if (this.peek().kind == TokenType.AS) {
+      this.eat(); // as
+      check = true;
+      alias = this.consume(TokenType.IDENTIFIER, "Alias name expected ID."); // <ID>
+    }
+
+    return {
+      kind: "ImportStatement",
+      module: AST_IDENTIFIER(module.value as string, module.loc),
+      check: check,
+      alias: AST_IDENTIFIER(alias.value as string, alias.loc),
+      loc: this.getLocationFromTokens(startToken.loc, module.loc),
+    } as ImportStatement;
   }
 
   private parse_elif_statement(): ElifStatement {
@@ -714,7 +854,8 @@ export default class Parser {
     | AssignmentDeclaration
     | IncrementExpr
     | DecrementExpr
-    | MemberCallExpr {
+    | MemberCallExpr
+    | MemberExpr {
     const token = this.peek();
 
     if (this.next().kind == TokenType.EQUALS) { // <ID> = <EXPR>
@@ -745,11 +886,12 @@ export default class Parser {
       } as DecrementExpr;
     }
 
-    if (this.peek().kind == TokenType.DOT) { // <ID>.<ID>
+    if (this.peek().kind == TokenType.DOT) { // <ID>.<ID> | <ID>.<ID>(...)
       this.eat(); // .
+      // deno-lint-ignore no-explicit-any
       const expr: any = this.parse_expr();
 
-      if (expr.kind == "CallExpr") {
+      if (expr.kind == "CallExpr") { // <ID>.<ID>(...)
         return {
           kind: "MemberCallExpr",
           type: expr.type,
@@ -759,13 +901,15 @@ export default class Parser {
         } as MemberCallExpr;
       }
 
-      if (expr.kind == "Identifier") {
-        //
+      if (expr.kind == "Identifier") { // <ID>.<ID>
+        return {
+          kind: "MemberExpr",
+          type: expr.type,
+          id: AST_IDENTIFIER(id.value as string, id.loc),
+          member: expr as Identifier,
+          loc: this.getLocationFromTokens(id.loc, expr.loc),
+        } as MemberExpr;
       }
-
-      //   if (expr.kind == "BinaryExpr") {
-      //     return expr;
-      //   }
 
       ErrorReporter.showError(
         `After '${id.value}.' a member function call, or member call, was expected.`,
@@ -796,19 +940,10 @@ export default class Parser {
       "Expected ).",
     );
 
-    if (this.peek().kind == TokenType.SEMICOLON) {
-      this.eat(); // remove ; if exists
-    }
-
     return {
       kind: "CallExpr",
       type: "id",
-      id: {
-        kind: "Identifier",
-        type: "id",
-        value: id.value,
-        loc: id.loc,
-      },
+      id: AST_IDENTIFIER(id.value as string, id.loc),
       args: args,
       loc: this.getLocationFromTokens(id.loc, endToken.loc),
     } as CallExpr;
@@ -867,7 +1002,6 @@ export default class Parser {
   private parse_var_declaration(): VarDeclaration {
     const startToken = this.eat(); // new
     let is_const: boolean = true;
-    const types: TypesNative[] = [];
 
     if (this.peek().kind === TokenType.MUT) {
       this.eat();
@@ -882,32 +1016,7 @@ export default class Parser {
     this.consume(TokenType.COLON, "Expected ':'."); // :
 
     // new
-    while (this.peek().kind !== TokenType.EQUALS) {
-      const type_tk: Token = this.consume(
-        TokenType.IDENTIFIER,
-        "The type of the variable was expected but was not passed.",
-      );
-      const type: TypesNative = type_tk.value as TypesNative;
-
-      if (!TypesNativeArray.includes(type as string)) {
-        ErrorReporter.showError("Invalid type.", type_tk.loc);
-        Deno.exit();
-      }
-
-      types.push(type);
-
-      if (this.peek().kind == TokenType.PIPE) {
-        this.eat(); // |
-        if (this.peek().kind == TokenType.EQUALS) {
-          ErrorReporter.showError(
-            "'=' is not expected after '|'",
-            this.peek().loc,
-          );
-          Deno.exit();
-        }
-        continue;
-      }
-    }
+    const types: TypesNative[] = this.parse_types(TokenType.EQUALS).types;
 
     this.consume(TokenType.EQUALS, "Expected '='.");
     const value = this.parse_expr();
@@ -963,6 +1072,44 @@ export default class Parser {
       this.next().loc,
     );
     Deno.exit(1);
+  }
+
+  private parse_types(stopToken: TokenType): IParsedTypes {
+    const types: TypesNative[] = [];
+
+    // Process tokens until the stop token (e.g., '=')
+    while (this.peek().kind !== stopToken) {
+      // Consume the token representing the type
+      const typeToken: Token = this.consume(
+        TokenType.IDENTIFIER,
+        "Expected a type for the variable but none was provided.",
+      );
+      const typeValue = typeToken.value as TypesNative;
+
+      // Validate the type against the allowed types
+      if (!TypesNativeArray.includes(typeValue as string)) {
+        ErrorReporter.showError("Invalid type.", typeToken.loc);
+        Deno.exit();
+      }
+
+      types.push(typeValue);
+
+      // If a pipe ('|') token is found, consume it and continue with additional types
+      if (this.peek().kind === TokenType.PIPE) {
+        this.eat(); // Consume the '|'
+        if (this.peek().kind === stopToken) {
+          ErrorReporter.showError(
+            `'${this.peek().value}' is not expected after '|'`,
+            this.peek().loc,
+          );
+          Deno.exit();
+        }
+      } else {
+        break;
+      }
+    }
+
+    return { types };
   }
 
   private validateType(value: Stmt, type: TypesNative[]): boolean {

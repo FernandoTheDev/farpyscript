@@ -71,7 +71,8 @@ Deno.test(
   {
     name: "Check Binary Expr",
     fn() {
-      const code = "(2 ** 2 - (0b10 + PI)) + 1.1415926535897931";
+      const code =
+        "import math (2 ** 2 - (0b10 + math.PI)) + 1.1415926535897931";
       const evaluated = evaluate_code(code);
       const expected = VALUE_FLOAT(0, evaluated.loc);
       expected.ret = true;
@@ -174,6 +175,34 @@ Deno.test(
       const expected = VALUE_INT(30, evaluated.loc);
       expected.ret = true;
       assert.assertEquals(evaluated, expected);
+    },
+  },
+);
+
+Deno.test(
+  {
+    name: "Increment Test",
+    fn() {
+      const code = `
+      new mut x: int = 10
+      x++
+      `;
+      const evaluated = evaluate_code(code);
+      assert.assertEquals(evaluated, VALUE_INT(11, evaluated.loc));
+    },
+  },
+);
+
+Deno.test(
+  {
+    name: "Decrement Test",
+    fn() {
+      const code = `
+      new mut x: int = 10
+      x--
+      `;
+      const evaluated = evaluate_code(code);
+      assert.assertEquals(evaluated, VALUE_INT(9, evaluated.loc));
     },
   },
 );
