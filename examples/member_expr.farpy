@@ -2,7 +2,7 @@ import math as m
 // import { fibonacci, PI } -> Do in the future
 
 print(m.PI)
-print(m.fibonacci(100))
+print(m.fibonacci(100).len().string())
 
 print(m.PI)
 

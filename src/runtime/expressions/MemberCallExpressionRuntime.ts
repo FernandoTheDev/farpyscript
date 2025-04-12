@@ -13,25 +13,33 @@ export class MemberCallExpressionRuntime {
     context: Context,
     _self: Runtime,
   ): RuntimeValue {
-    const var_exists = context.look_up_var(stmt.id.value as string) ??
-      context.look_up_const(stmt.id.value as string);
+    // console.log("Runtime:", expr);
+
+    // @ts-ignore
     const module_exists = context.look_up_alias(stmt.id);
 
     if (module_exists !== undefined) {
       return this.evaluate_module_call(stmt, _self, module_exists);
     }
 
-    if (var_exists == undefined) {
-      ErrorReporter.showError(
-        `Variable does not exist '${stmt.id.value}'`,
-        stmt.id.loc,
-      );
-      Deno.exit();
-    }
+    // console.log(stmt.id);
+    const expr: RuntimeValue = _self.evaluate(stmt.id);
+    // console.debug(stmt);
+    // console.debug(var_exists);
 
-    const classType = this.check_class_type(stmt.loc, _self, var_exists!);
+    // if (var_exists == undefined) {
+    //   ErrorReporter.showError(
+    //     `Variable does not exist '${stmt.id.value}'.`,
+    //     stmt.id.loc,
+    //   );
+    //   Deno.exit();
+    // }
+
+    const classType = this.check_class_type(stmt.loc, _self, expr!);
     // @ts-ignore: Exists
     const method = classType[stmt.member.id.value];
+
+    console.debug("Debug", stmt);
 
     if (typeof method !== "function") {
       ErrorReporter.showError(
@@ -118,15 +126,15 @@ export class MemberCallExpressionRuntime {
     self: Runtime,
     type: any,
   ) {
-    switch (type.value.type!) {
+    switch (type.type!) {
       case "string":
-        return new StringType(type.value as StringValue, self);
+        return new StringType(type as StringValue, self);
       case "map":
-        return new MapType(type.value as MapValue, self);
+        return new MapType(type as MapValue, self);
       default: {
         ErrorReporter.showError(
           `The Type of the value of this variable is not recognized '${type
-            .value.type!}'.`,
+            .type!}'.`,
           stmt_loc,
         );
         Deno.exit();

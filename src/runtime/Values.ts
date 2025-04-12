@@ -25,8 +25,9 @@ export type TypesNative =
   | "lambda"
   | "object"
   | "map"
+  | "array"
   | FunctionType;
-// | GenericType;
+// GenericType;
 
 export const TypesNativeArray: string[] = [
   "string",
@@ -42,6 +43,7 @@ export const TypesNativeArray: string[] = [
   "lambda",
   "object",
   "map",
+  "array",
   "FunctionType",
 ];
 
@@ -172,4 +174,24 @@ export interface ImportStatementValue extends RuntimeValue {
 export interface MapValue extends RuntimeValue {
   type: "map";
   map: Map<NativeValue, NativeValue>;
+}
+
+export interface ArrayValue extends RuntimeValue {
+  type: "array";
+  value: RuntimeValue[];
+}
+
+export function VALUE_ARRAY(n: RuntimeValue[] = [], loc: Loc): ArrayValue {
+  return { type: "array", value: n, loc: loc, ret: false };
+}
+
+export interface ObjectValue extends RuntimeValue {
+  type: "object";
+  value: Map<Identifier, RuntimeValue>;
+}
+export function VALUE_OBJECT(
+  obj: Map<Identifier, RuntimeValue> = new Map(),
+  loc: Loc,
+): ObjectValue {
+  return { type: "object", value: obj, loc: loc, ret: false };
 }

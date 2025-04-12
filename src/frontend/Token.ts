@@ -52,8 +52,10 @@ export enum TokenType {
   RPAREN, // ) 40
   LBRACE, // { 41
   RBRACE, // } 42
+  LBRACKET, // [ 43
+  RBRACKET, // ] 44
 
-  EOF, // EndOfFile 43
+  EOF, // EndOfFile 45
 }
 
 export type NativeValue =

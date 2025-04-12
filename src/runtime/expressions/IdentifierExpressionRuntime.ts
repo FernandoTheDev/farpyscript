@@ -13,6 +13,10 @@ export class IdentifierExpressionRuntime {
     const var_exists = context.look_up_var(stmt.value);
     const const_exists = context.look_up_const(stmt.value);
 
+    // console.log(stmt);
+    // console.log(var_exists);
+    // console.log(const_exists);
+
     if (var_exists != undefined) {
       return var_exists?.value ??
         VALUE_NULL(null, stmt.loc);
@@ -20,8 +24,9 @@ export class IdentifierExpressionRuntime {
       return const_exists?.value ??
         VALUE_NULL(null, stmt.loc);
     }
+
     ErrorReporter.showError(
-      `Variable does not exist ${stmt.value}`,
+      `Variable does not exist '${stmt.value}'.`,
       stmt.loc,
     );
     Deno.exit();

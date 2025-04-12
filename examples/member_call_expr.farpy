@@ -1,5 +1,5 @@
 new name: string = "Fernando"
 
-print(name.at(0).length()) // F
-print(name.length()) // 8
-print(2 ** name.length()) // 256 2⁸
+name.at(0).length() // F
+name.length() // 8
+2 ** name.length() // 256 2⁸

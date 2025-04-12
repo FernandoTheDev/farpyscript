@@ -67,6 +67,24 @@ export function define_env(context: Context): Context {
     } as FunctionNativeDeclarationValue,
   );
 
+  // dd(x, y, ...)
+  context.new_function(
+    AST_IDENTIFIER("dd", loc),
+    {
+      kind: "native-fn",
+      infinity: true,
+      args: [] as ArgsValue[],
+      type: ["null"] as TypesNative[],
+      context: new Context(context, true),
+      fn: NATIVE_FN((args, _scope) => {
+        for (const arg of args) {
+          console.log(arg);
+        }
+        return VALUE_NULL(null, loc);
+      }),
+    } as FunctionNativeDeclarationValue,
+  );
+
   context.new_module(
     AST_IDENTIFIER("math", loc),
     new Map()

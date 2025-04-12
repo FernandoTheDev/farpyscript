@@ -29,6 +29,8 @@ export type NodeType =
   | "MemberCallExpr"
   | "MemberExpr"
   | "BinaryExpr"
+  | "ArrayLiteral"
+  | "ObjectLiteral"
   | "BreakStatement";
 
 export interface Stmt {
@@ -69,7 +71,7 @@ export interface Identifier extends Expr {
   value: string;
 }
 
-export function AST_IDENTIFIER(id: string = "err", loc: Loc): Identifier {
+export function AST_IDENTIFIER(id: string, loc: Loc): Identifier {
   return {
     kind: "Identifier",
     type: "id",
@@ -83,7 +85,7 @@ export interface StringLiteral extends Expr {
   value: string;
 }
 
-export function AST_STRING(str: string = "err", loc: Loc): StringLiteral {
+export function AST_STRING(str: string, loc: Loc): StringLiteral {
   return {
     kind: "StringLiteral",
     type: "string",
@@ -148,6 +150,41 @@ export function AST_NULL(loc: Loc): NullLiteral {
   } as NullLiteral;
 }
 
+export interface ArrayLiteral extends Stmt {
+  kind: "ArrayLiteral";
+  type: "array";
+  value: Expr[];
+  loc: Loc;
+}
+
+export function AST_ARRAY(arr: Expr[] = [], loc: Loc): ArrayLiteral {
+  return {
+    kind: "ArrayLiteral",
+    type: "array",
+    value: arr,
+    loc: loc,
+  } as ArrayLiteral;
+}
+
+export interface ObjectLiteral extends Stmt {
+  kind: "ObjectLiteral";
+  type: "object";
+  value: Map<Identifier, Expr>;
+  loc: Loc;
+}
+
+export function AST_OBJECT(
+  obj: Map<Identifier, Expr> = new Map(),
+  loc: Loc,
+): ObjectLiteral {
+  return {
+    kind: "ObjectLiteral",
+    type: "object",
+    value: obj,
+    loc: loc,
+  } as ObjectLiteral;
+}
+
 // Declarations {{
 
 // new age: int = 17 | new mut name: string = "Fernando"
@@ -199,24 +236,25 @@ export interface LambdaExpr extends Expr {
   body: Stmt[];
 }
 
-export interface IndexingExpr extends Expr {
-  kind: "IndexingExpr";
-  type: TypesNative | TypesNative[];
-  target: Expr;
-  index: Expr;
-}
+// export interface IndexingExpr extends Expr {
+//   kind: "IndexingExpr";
+//   type: TypesNative | TypesNative[];
+//   target: Expr;
+//   index: Expr;
+// }
 
 export interface MemberCallExpr extends Expr {
   kind: "MemberCallExpr";
   type: TypesNative | TypesNative[];
-  id: Identifier;
+  id: Expr;
   member: CallExpr;
 }
 
 export interface MemberExpr extends Expr {
   kind: "MemberExpr";
+  computed: boolean; // true if is computed
   type: TypesNative | TypesNative[];
-  id: Identifier;
+  id: Expr;
   member: Identifier;
 }
 

@@ -2,7 +2,7 @@ import { VarDeclaration as VD } from "../../backend/AST.ts";
 import { ErrorReporter } from "../../error/ErrorReporter.ts";
 import Context from "../context/Context.ts";
 import Runtime from "../Runtime.ts";
-import { RuntimeValue, VarDeclarationValue } from "../Values.ts";
+import { RuntimeValue, TypesNative, VarDeclarationValue } from "../Values.ts";
 
 export default class VarDeclarationRuntime {
   public static evaluate(
@@ -10,6 +10,8 @@ export default class VarDeclarationRuntime {
     context: Context,
     self: Runtime,
   ): RuntimeValue {
+    // console.log(stmt);
+
     if (
       context.look_up_alias(stmt.id) != undefined
     ) {
@@ -21,6 +23,12 @@ export default class VarDeclarationRuntime {
     }
 
     const value: RuntimeValue = self.evaluate(stmt.value);
+    value.ret = false;
+
+    if (!self.validateType(value, stmt.type as TypesNative[])) {
+      return value;
+    }
+
     context.new_var(
       stmt.id,
       {
@@ -29,7 +37,7 @@ export default class VarDeclarationRuntime {
       } as VarDeclarationValue,
       stmt.constant,
     );
-    value.ret = false;
+
     return value;
   }
 }

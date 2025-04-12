@@ -1,12 +1,15 @@
 import { Loc, Token, TokenType } from "../frontend/Token.ts";
 import { ErrorReporter } from "../error/ErrorReporter.ts";
 import {
+  ArrayLiteral,
   AssignmentDeclaration,
+  AST_ARRAY,
   AST_BINARY,
   AST_FLOAT,
   AST_IDENTIFIER,
   AST_INT,
   AST_NULL,
+  AST_OBJECT,
   AST_STRING,
   BinaryExpr,
   BinaryLiteral,
@@ -28,6 +31,7 @@ import {
   MemberCallExpr,
   MemberExpr,
   NullLiteral,
+  ObjectLiteral,
   Program,
   Stmt,
   VarDeclaration,
@@ -41,28 +45,47 @@ import { DecrementExpr, IncrementExpr } from "./AST.ts";
 import { ReturnStatement } from "./AST.ts";
 
 export default class Parser {
-  private tokens: Token[];
+  private tokens: Token[] = [];
+  protected pos: number = 0;
+  private program: Program = {
+    kind: "Program",
+    type: "null",
+    value: null,
+    body: [],
+    loc: {} as Loc,
+  };
+  protected lastParsed: Stmt = {
+    kind: "NullLiteral",
+    type: "null",
+    value: null,
+    loc: {} as Loc,
+  };
 
   public constructor(tokens: Token[]) {
     this.tokens = tokens;
   }
 
-  private is_end(index: number = 0): boolean {
+  private is_end(index: number = this.pos): boolean {
     return this.tokens[index] === undefined ||
       this.tokens[index].kind === TokenType.EOF;
   }
 
   private peek(): Token {
-    return this.tokens[0];
+    return this.tokens[this.pos];
   }
 
   private next(): Token {
-    return this.tokens[1] ??
+    return this.tokens[this.pos + 1] ??
+      { kind: TokenType.EOF, value: "\0", loc: {} as Loc };
+  }
+
+  private back(): Token {
+    return this.tokens[this.pos - 1] ??
       { kind: TokenType.EOF, value: "\0", loc: {} as Loc };
   }
 
   private eat(): Token {
-    return this.tokens.shift() as Token;
+    return this.tokens[this.pos++] as Token;
   }
 
   private consume(type: TokenType | TokenType[], err: string): Token {
@@ -83,22 +106,18 @@ export default class Parser {
   }
 
   public parse(): Program {
-    const program: Program = {
-      kind: "Program",
-      type: "null",
-      value: null,
-      body: [],
-      loc: this.getLocationFromTokens(
-        this.tokens[0],
-        this.tokens[this.tokens.length - 1],
-      ),
-    };
-
     while (!this.is_end()) {
-      program.body?.push(this.parse_stmt());
+      const parsed: Stmt = this.parse_stmt();
+      this.program.body?.push(parsed);
+      this.lastParsed = parsed;
     }
 
-    return program;
+    this.program.loc = this.getLocationFromTokens(
+      this.tokens[0],
+      this.tokens[this.tokens.length - 1],
+    );
+
+    return this.program;
   }
 
   private parse_stmt(): Stmt {
@@ -210,27 +229,18 @@ export default class Parser {
     switch (token.kind) {
       case TokenType.IDENTIFIER:
         return this.parse_identifier();
-      case TokenType.INT: {
-        this.eat();
-        return AST_INT(token.value as number, token.loc);
-      }
-      case TokenType.FLOAT: {
-        this.eat();
-        return AST_FLOAT(token.value as number, token.loc);
-      }
+      case TokenType.INT:
+        return AST_INT(token.value as number, this.eat().loc);
+      case TokenType.FLOAT:
+        return AST_FLOAT(token.value as number, this.eat().loc);
       case TokenType.BINARY:
         return this.parseBinaryLiteral();
-      case TokenType.MINUS: {
+      case TokenType.MINUS:
         return this.parseNegativeValue();
-      }
-      case TokenType.STRING: {
-        const str = this.eat();
-        return AST_STRING(str.value as string, str.loc);
-      }
-      case TokenType.NULL: {
-        this.eat();
-        return AST_NULL(token.loc);
-      }
+      case TokenType.STRING:
+        return AST_STRING(token.value as string, this.eat().loc);
+      case TokenType.NULL:
+        return AST_NULL(this.eat().loc);
       case TokenType.LPAREN: {
         const startToken = this.eat();
         const value: Expr = this.parse_expr();
@@ -257,13 +267,140 @@ export default class Parser {
         return this.parse_for_statement();
       case TokenType.BREAK:
         return this.parse_break_statement();
+      case TokenType.LBRACE: // {
+        return this.parse_array_or_object();
+      // case TokenType.DOT:
+      //   return this.parse_member_and_call_expression();
+      case TokenType.EOF:
+        return AST_NULL(token.loc);
       default:
+        console.debug(token);
         ErrorReporter.showError(
           "Unexpected token found during parsing!",
           token.loc,
         );
         Deno.exit(1);
     }
+  }
+
+  private parse_member_and_call_expression(): MemberExpr | MemberCallExpr {
+    const id = this.lastParsed;
+
+    this.eat(); // .
+    // deno-lint-ignore no-explicit-any
+    const expr: any = this.parse_expr();
+
+    if (expr.kind == "CallExpr") { // <ID>.<ID>(...)
+      return {
+        kind: "MemberCallExpr",
+        type: expr.type,
+        id: id,
+        member: expr as CallExpr,
+        loc: this.getLocationFromTokens(id.loc, expr.loc),
+      } as MemberCallExpr;
+    }
+
+    if (expr.kind == "Identifier") { // <ID>.<ID>
+      return {
+        kind: "MemberExpr",
+        type: expr.type,
+        computed: false,
+        id: id,
+        member: expr as Identifier,
+        loc: this.getLocationFromTokens(id.loc, expr.loc),
+      } as MemberExpr;
+    }
+
+    ErrorReporter.showError(
+      `After '${id.value}.' a member function call, or member call, was expected.`,
+      this.getLocationFromTokens(id.loc, expr.loc),
+    );
+    Deno.exit();
+  }
+
+  // We will return whether it is an Array { EXPR, EXPR, ... } or object/dictionary { key: value, .... }
+  private parse_array_or_object(): ArrayLiteral | ObjectLiteral {
+    const startToken: Token = this.consume(TokenType.LBRACE, "Expected '{'.");
+    const values: Expr[] = [];
+    const dictionary: Map<Identifier, Expr> = new Map();
+
+    // Will be null until we determine the structure type (array or object)
+    let isArray: boolean = true;
+
+    while (this.peek().kind !== TokenType.RBRACE) {
+      const left: Expr = this.parse_expr();
+      const nextToken = this.peek();
+
+      if (nextToken.kind === TokenType.COLON) {
+        if (isArray === false) {
+          ErrorReporter.showError(
+            "Cannot mix array values and object entries.",
+            left.loc,
+          );
+          Deno.exit(1);
+        }
+
+        this.eat();
+        const right: Expr = this.parse_expr();
+
+        if (left.kind !== "Identifier") {
+          ErrorReporter.showError(
+            "The key of the object must be an identifier.",
+            left.loc,
+          );
+          Deno.exit(1);
+        }
+
+        const key: Identifier = left as Identifier;
+
+        if (dictionary.has(key)) {
+          ErrorReporter.showError(
+            `Duplicate key '${key.value}' in object.`,
+            key.loc,
+          );
+          Deno.exit(1);
+        }
+
+        dictionary.set(key, right);
+        isArray = false;
+
+        if (this.peek().kind === TokenType.COMMA) {
+          this.eat();
+        }
+      } else if (
+        nextToken.kind === TokenType.COMMA ||
+        nextToken.kind === TokenType.RBRACE
+      ) {
+        // Detected array value
+        if (isArray === true) {
+          ErrorReporter.showError(
+            "Cannot mix object entries and array values.",
+            left.loc,
+          );
+          Deno.exit(1);
+        }
+
+        values.push(left);
+        isArray = false;
+
+        if (nextToken.kind === TokenType.COMMA) {
+          this.eat();
+        }
+      } else {
+        ErrorReporter.showError("Unexpected token.", nextToken.loc);
+        Deno.exit(1);
+      }
+    }
+
+    const endToken: Token = this.consume(
+      TokenType.RBRACE,
+      "Expected '}' after array or object.",
+    );
+
+    const location = this.getLocationFromTokens(startToken.loc, endToken.loc);
+    return isArray
+      ? AST_ARRAY(values, location)
+      : AST_OBJECT(dictionary, location);
   }
 
   private parse_break_statement(): BreakStatement {
@@ -866,13 +1003,29 @@ export default class Parser {
       return this.parse_call_expr();
     }
 
-    const id: Token = this.eat();
+    const id_t = this.eat();
+    const id: Identifier = AST_IDENTIFIER(id_t.value as string, id_t.loc);
+
+    if (this.peek().kind == TokenType.LBRACKET) { // <ID>[<EXPR>]
+      this.eat(); // [
+      const expr: any = this.parse_expr();
+      this.consume(TokenType.RBRACKET, "Expected ']' after '[<EXPR>'.");
+
+      return {
+        kind: "MemberExpr",
+        type: expr.type,
+        computed: true,
+        id: id,
+        member: expr as Identifier,
+        loc: this.getLocationFromTokens(id.loc, expr.loc),
+      } as MemberExpr;
+    }
 
     if (this.peek().kind == TokenType.INCREMENT) { // <ID>++
       this.eat(); // ++
       return {
         kind: "IncrementExpr",
-        value: AST_IDENTIFIER(id.value as string, id.loc),
+        value: id,
         loc: id.loc,
       } as IncrementExpr;
     }
@@ -881,7 +1034,7 @@ export default class Parser {
       this.eat(); // --
       return {
         kind: "DecrementExpr",
-        value: AST_IDENTIFIER(id.value as string, id.loc),
+        value: id,
         loc: id.loc,
       } as DecrementExpr;
     }
@@ -891,24 +1044,28 @@ export default class Parser {
       // deno-lint-ignore no-explicit-any
       const expr: any = this.parse_expr();
 
+      // if (this.peek().kind == TokenType.DOT) { // encadeamento
+      //   return this.parse_member_and_call_expression();
+      // }
+
       if (expr.kind == "CallExpr") { // <ID>.<ID>(...)
         return {
           kind: "MemberCallExpr",
           type: expr.type,
-          id: AST_IDENTIFIER(id.value as string, id.loc),
+          id: id,
           member: expr as CallExpr,
           loc: this.getLocationFromTokens(id.loc, expr.loc),
-        } as MemberCallExpr;
+        } as unknown as MemberCallExpr;
       }
 
       if (expr.kind == "Identifier") { // <ID>.<ID>
         return {
           kind: "MemberExpr",
           type: expr.type,
-          id: AST_IDENTIFIER(id.value as string, id.loc),
+          id: id,
           member: expr as Identifier,
           loc: this.getLocationFromTokens(id.loc, expr.loc),
-        } as MemberExpr;
+        } as unknown as MemberExpr;
       }
 
       ErrorReporter.showError(
@@ -918,7 +1075,7 @@ export default class Parser {
       Deno.exit();
     }
 
-    return AST_IDENTIFIER(id.value as string, token.loc);
+    return id;
   }
 
   private parse_call_expr(): CallExpr {
@@ -955,34 +1112,29 @@ export default class Parser {
     while (this.peek().kind !== TokenType.RPAREN) {
       const value = this.parse_expr();
 
-      if (this.peek().kind == TokenType.COMMA) {
-        args.push(value);
-        this.eat(); // ,
+      // Add the parsed expression to arguments
+      args.push(value);
 
-        if (
-          this.next().kind == TokenType.LBRACE ||
-          this.next().kind == TokenType.SEMICOLON
-        ) {
+      // Check for comma separator
+      if (this.peek().kind === TokenType.COMMA) {
+        this.eat(); // consume comma
+
+        // Error if comma is followed by invalid tokens
+        if (this.peek().kind === TokenType.RPAREN) {
           ErrorReporter.showError(
-            `Expected EXPR after ','`,
+            "Unexpected ',' before closing parenthesis",
             this.peek().loc,
           );
           Deno.exit();
         }
-
-        continue;
+      } else if (this.peek().kind !== TokenType.RPAREN) {
+        // If not a comma or closing paren, it's an error
+        ErrorReporter.showError(
+          `Expected ',' or ')' but got '${this.peek().value}'`,
+          this.peek().loc,
+        );
+        Deno.exit();
       }
-
-      if (this.peek().kind == TokenType.RPAREN) {
-        args.push(value);
-        break;
-      }
-
-      ErrorReporter.showError(
-        `Expected , receive ${this.peek().value}`,
-        this.peek().loc,
-      );
-      Deno.exit();
     }
 
     return args;

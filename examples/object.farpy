@@ -1,10 +1,6 @@
 new obj: object = {
     name: "Fernando",
-    age: 17,
-    data: {
-        ...
-    }
+    age: 17
 }
 
-obj.name = ...
-print(obj.name)
+dd(obj.name)

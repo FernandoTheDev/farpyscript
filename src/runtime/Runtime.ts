@@ -1,5 +1,6 @@
 import {
   AssignmentDeclaration,
+  AST_IDENTIFIER,
   BinaryExpr,
   BinaryLiteral,
   BreakStatement,
@@ -7,6 +8,7 @@ import {
   DecrementExpr,
   ElifStatement,
   ElseStatement,
+  Expr,
   ForStatement,
   FunctionDeclaration,
   Identifier,
@@ -27,10 +29,12 @@ import {
   IntValue,
   NullValue,
   RuntimeValue,
+  VALUE_ARRAY,
   VALUE_BOOL,
   VALUE_FLOAT,
   VALUE_INT,
   VALUE_NULL,
+  VALUE_OBJECT,
   VALUE_STRING,
 } from "./Values.ts";
 import VarDeclarationRuntime from "./declarations/VarDeclarationRuntime.ts";
@@ -72,6 +76,19 @@ export default class Runtime {
         return VALUE_NULL(null, stmt.loc);
       case "StringLiteral":
         return VALUE_STRING(stmt.value, stmt.loc);
+      case "ArrayLiteral":
+        return VALUE_ARRAY(
+          stmt.value.map((item: Expr) => this.evaluate(item)),
+          stmt.loc,
+        );
+      case "ObjectLiteral": {
+        const newMap = new Map<Identifier, RuntimeValue>();
+        for (const [key, value] of stmt.value.entries()) {
+          const evaluatedValue = this.evaluate(value as Stmt);
+          newMap.set(key, evaluatedValue);
+        }
+        return VALUE_OBJECT(newMap, stmt.loc);
+      }
       case "BinaryExpr":
         return this.evaluate_binary_expr(stmt as BinaryExpr);
       case "ReturnStatement": {
